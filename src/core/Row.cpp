@@ -1,44 +1,38 @@
-#include "../../include/core/Row.h"
+#include "../../include/core/Row.hpp"
 
-
-Row::Row(int rowId){
+Row::Row(int rowId) {
     this->id = rowId;
 }
 
-Row::~Row(){
+Row::~Row() {
 
-    for(size_t i = 0 ; i < cells.size() ; i++){
-        delete cells[i];
+    for (auto cell : cells) {
+        delete cell;
     }
-
-
 }
 
-
-void Row::addCell(int value){
-    Cell* newCell = new Cell(value);
-
-    cells.push_back(newCell);
+void Row::addCell(int value) {
+    cells.push_back(new Cell(value));
 }
 
-void Row::addCell(double value){
-    Cell* newCell = new Cell(value);
-
-    cells.push_back(newCell);
+void Row::addCell(double value) {
+    cells.push_back(new Cell(value));
 }
 
-void Row::addCell(std::string value){
-    Cell* newCell = new Cell(value);
-
-    cells.push_back(newCell);
+void Row::addCell(std::string value) {
+    cells.push_back(new Cell(value));
 }
 
-
-Cell* Row::getCell(size_t index){
-
+Cell* Row::getCell(size_t index) {
     
-    return cells[index];
-
+    size_t counter = 0;
+    for (auto cell : cells) {
+        if (counter == index) {
+            return cell;
+        }
+        counter++;
+    }
+    throw std::out_of_range("Row::getCell - Index out of bounds");
 }
 
 int Row::getId() const {
