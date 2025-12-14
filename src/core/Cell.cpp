@@ -1,35 +1,79 @@
 #include "../../include/core/Cell.hpp"
 
-Cell::Cell(int value) {
-    this->type = CellType::INT;
-    this->intValue = value;
-}
+// --- CONSTRUCTORS ---
 
-Cell::Cell(double value) {
-    this->type = CellType::DOUBLE;
-    this->doubleValue = value;
-}
+// Varsayılan Kurucu: Boş bir INT (0) oluşturur.
+// Bu sayede "new Cell[10]" diyebilirsin.
+Cell::Cell() : type(CellType::INT), intValue(0) {}
 
-Cell::Cell(std::string value) {
-    this->type = CellType::STRING;
-    this->stringValue = value;
-}
+Cell::Cell(int v) : type(CellType::INT), intValue(v) {}
+
+Cell::Cell(double v) : type(CellType::DOUBLE), doubleValue(v) {}
+
+Cell::Cell(std::string v) : type(CellType::STRING), stringValue(v), intValue(0) {}
+
+// --- GETTERS ---
 
 CellType Cell::getType() const {
-    return this->type;
+    return type;
 }
 
 int Cell::getInt() const {
-    if (this->type != CellType::INT) throw std::runtime_error("Type mismatch: Not INT");
-    return this->intValue;
+    return intValue;
 }
 
 double Cell::getDouble() const {
-    if (this->type != CellType::DOUBLE) throw std::runtime_error("Type mismatch: Not DOUBLE");
-    return this->doubleValue;
+    return doubleValue;
 }
 
 std::string Cell::getString() const {
-    if (this->type != CellType::STRING) throw std::runtime_error("Type mismatch: Not STRING");
-    return this->stringValue;
+    return stringValue;
+}
+
+// --- OPERATORS (KARŞILAŞTIRMA MANTIĞI) ---
+
+bool Cell::operator<(const Cell& other) const {
+    // Tipler farklıysa tipleri kıyasla (Örn: INT < STRING)
+    if (type != other.type) {
+        return type < other.type;
+    }
+
+    // Tipler aynıysa değerleri kıyasla
+    switch (type) {
+        case CellType::INT:    return intValue < other.intValue;
+        case CellType::DOUBLE: return doubleValue < other.doubleValue;
+        case CellType::STRING: return stringValue < other.stringValue;
+        default: return false;
+    }
+}
+
+bool Cell::operator==(const Cell& other) const {
+    if (type != other.type) return false;
+
+    switch (type) {
+        case CellType::INT:    return intValue == other.intValue;
+        case CellType::DOUBLE: return doubleValue == other.doubleValue;
+        case CellType::STRING: return stringValue == other.stringValue;
+        default: return false;
+    }
+}
+
+// Diğer operatörleri yukarıdakileri kullanarak tanımlıyoruz
+bool Cell::operator>(const Cell& other) const {
+    return !(*this < other) && !(*this == other);
+}
+
+bool Cell::operator!=(const Cell& other) const {
+    return !(*this == other);
+}
+
+// --- PRINT OPERATOR (<<) ---
+// Artık "cout << cell" diyebileceksin.
+std::ostream& operator<<(std::ostream& os, const Cell& c) {
+    switch (c.type) {
+        case CellType::INT:    os << c.intValue; break;
+        case CellType::DOUBLE: os << c.doubleValue; break;
+        case CellType::STRING: os << c.stringValue; break;
+    }
+    return os;
 }
