@@ -52,3 +52,19 @@ void Table::print() const {
     }
     std::cout << "====================================" << std::endl;
 }
+
+std::string Table::getName() const {
+    return this->name;
+}
+
+const LinkedList<std::string>& Table::getColumns() const {
+    return this->columns;
+}
+
+const LinkedList<std::string>& Table::getTypes() const {
+    return this->types;
+}
+
+const LinkedList<Row*>& Table::getRows() const {
+    return this->rows;
+}

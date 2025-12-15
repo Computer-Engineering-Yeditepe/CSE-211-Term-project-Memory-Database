@@ -29,6 +29,11 @@ public:
     void print() const;
     
     size_t getRowCount() const;
+
+    std::string getName() const;
+    const LinkedList<std::string>& getColumns() const; 
+    const LinkedList<std::string>& getTypes() const;
+    const LinkedList<Row*>& getRows() const;
 };
 
 #endif

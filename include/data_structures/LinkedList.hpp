@@ -36,9 +36,14 @@ public:
             return *this;
         }
 
+        bool operator==(const Iterator& other) const {
+            return current == other.current;
+        }
+
         bool operator!=(const Iterator& other) const {
             return current != other.current;
         }
+
     };
 
 
@@ -55,6 +60,10 @@ public:
             return *this;
         }
 
+        bool operator==(const ConstIterator& other) const {
+            return current == other.current;
+        }
+        
         bool operator!=(const ConstIterator& other) const {
             return current != other.current;
         }

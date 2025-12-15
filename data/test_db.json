@@ -1,0 +1,25 @@
+{
+    "column_types": [
+        "INT",
+        "STRING",
+        "INT"
+    ],
+    "columns": [
+        "ID",
+        "Isim",
+        "Yas"
+    ],
+    "rows": [
+        [
+            1,
+            "Ali Veli",
+            25
+        ],
+        [
+            2,
+            "Zeynep Kaya",
+            30
+        ]
+    ],
+    "table_name": "Personel"
+}
