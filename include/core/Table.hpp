@@ -19,10 +19,12 @@ private:
     HashIndex<int> primaryIndex;
 
 public:
-    
-    Table(const std::string& tableName, const LinkedList<std::string>& colNames, const LinkedList<std::string>& colTypes);
+    Table(std::string tableName);
+    ~Table(); // Row*'ları temizlemek için destructor şart
 
-    ~Table();
+    void insert(Row* row); // Pointer alır
+    LinkedList<Row*>& getRows();
+    std::string getName() const;
 
     void insertRow(Row* row);
     
