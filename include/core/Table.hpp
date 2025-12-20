@@ -4,8 +4,8 @@
 #include <string>
 #include <iostream>
 #include "../data_structures/LinkedList.hpp"
+#include "../index/HashIndex.hpp"
 #include "Row.hpp"
-
 class Table {
 private:
     std::string name;
@@ -16,6 +16,7 @@ private:
     
     
     LinkedList<Row*> rows;
+    HashIndex<int> primaryIndex;
 
 public:
     
@@ -25,6 +26,9 @@ public:
 
     void insertRow(Row* row);
     
+    Row* getRowById(int id);
+
+    void removeRow(int id);
     
     void print() const;
     

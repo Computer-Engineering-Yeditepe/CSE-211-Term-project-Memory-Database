@@ -6,22 +6,24 @@
 
 template <typename T>
 class LinkedList {
+
+
+public:
+    struct Node {
+            T data;
+            Node* next;
+            Node* prev;
+
+            Node(const T& value) : data(value), next(nullptr), prev(nullptr) {}
+        };
+
 private:
     
-    struct Node {
-        T data;
-        Node* next;
-        Node* prev;
-
-        Node(const T& value) : data(value), next(nullptr), prev(nullptr) {}
-    };
-
     Node* head;
     Node* tail;
     size_t length;
 
 public:
-
 
     class Iterator {
     private:
@@ -103,7 +105,43 @@ public:
         length++;
     }
 
-    
+    void remove(const T& value) {
+        Node* current = head;
+        while (current != nullptr) {
+            
+            if (current->data == value) {
+                
+                if (current == head) {
+                    head = current->next;
+                    if (head != nullptr) {
+                        head->prev = nullptr;
+                    } else {
+                        tail = nullptr; 
+                    }
+                } 
+                
+                else if (current == tail) {
+                    tail = current->prev;
+                    if (tail != nullptr) {
+                        tail->next = nullptr;
+                    }
+                } 
+                
+                else {
+                    current->prev->next = current->next;
+                    current->next->prev = current->prev;
+                }
+
+                delete current; 
+                length--;       
+                return;         
+            }
+            current = current->next;
+        }
+    }
+
+    Node* getHead() const { return head; }
+    Node* getTail() const { return tail; }
     size_t size() const { return length; }
     bool empty() const { return length == 0; }
 

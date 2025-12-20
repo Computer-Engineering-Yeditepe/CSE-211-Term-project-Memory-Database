@@ -97,16 +97,18 @@ Table* FileManager::loadTable(const std::string& filename) {
     
     for (const auto& rowJson : j["rows"]) {
         
-        Row* newRow = new Row(0); 
+        int rowId = 0;
         
-        
+        if (!rowJson.empty() && rowJson[0].is_number_integer()) {
+            rowId = rowJson[0].get<int>();
+        }
+
+        Row* newRow = new Row(rowId); 
         
         auto typeIt = types.begin();
-
         for (const auto& cellValue : rowJson) {
             
             if (typeIt == types.end()) break;
-
             std::string type = *typeIt; 
 
             if (type == "INT") {
@@ -121,7 +123,6 @@ Table* FileManager::loadTable(const std::string& filename) {
             
             ++typeIt; 
         }
-        
         
         newTable->insertRow(newRow);
     }
