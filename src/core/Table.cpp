@@ -5,6 +5,8 @@ Table::Table(const std::string& tableName, const LinkedList<std::string>& colNam
     : primaryIndex(16) {
     this->name = tableName;
     
+    this->bTreeIndex = new index::BPlusTree(4);
+
     for(const auto& col : colNames) this->columns.push_back(col);
     for(const auto& type : colTypes) this->types.push_back(type);
 }
@@ -13,24 +15,30 @@ Table::~Table() {
     for (auto row : rows) {
         delete row;
     }
+    delete bTreeIndex;
 }
 
 void Table::insertRow(Row* row) {
     rows.push_back(row);
 
     primaryIndex.insert(row->getId(), row);
+
+    index::RecordID record = {0, 0, row};
+    bTreeIndex->insert(row->getId(), record);
 }
 
 Row* Table::getRowById(int id) { return primaryIndex.search(id);}
 
 void Table::removeRow(int id) {
-    // Silinecek satırı önce bulalım
+
     Row* rowToDelete = primaryIndex.search(id);
     
     if (rowToDelete != nullptr) {
         primaryIndex.remove(id);
 
         rows.remove(rowToDelete); 
+
+        bTreeIndex->remove(id);
 
         delete rowToDelete;
         
@@ -72,6 +80,8 @@ void Table::print() const {
         }
         std::cout << std::endl;
     }
+    std::cout << "\n--- Index Yapisi (B+ Tree) ---" << std::endl;
+    bTreeIndex->print();
     std::cout << "====================================" << std::endl;
 }
 
