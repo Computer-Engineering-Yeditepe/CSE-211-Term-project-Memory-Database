@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 
-
 // --- YARDIMCI YAPILAR ---
 
 struct JoinNode {
@@ -20,14 +19,6 @@ size_t customHash(const std::string& key, int tableSize) {
         hash = ((hash << 5) + hash) + c; 
     }
     return hash % tableSize;
-
-Table::Table(const std::string& tableName, const LinkedList<std::string>& colNames, const LinkedList<std::string>& colTypes)
-    : primaryIndex(16) {
-    this->name = tableName;
-    
-    for(const auto& col : colNames) this->columns.push_back(col);
-    for(const auto& type : colTypes) this->types.push_back(type);
-
 }
 
 // --- TABLE IMPLEMENTASYONU ---
@@ -45,27 +36,6 @@ Table::~Table() {
 
 void Table::insert(Row* row) {
     rows.push_back(row);
-
-    primaryIndex.insert(row->getId(), row);
-}
-
-Row* Table::getRowById(int id) { return primaryIndex.search(id);}
-
-void Table::removeRow(int id) {
-    // Silinecek satırı önce bulalım
-    Row* rowToDelete = primaryIndex.search(id);
-    
-    if (rowToDelete != nullptr) {
-        primaryIndex.remove(id);
-
-        rows.remove(rowToDelete); 
-
-        delete rowToDelete;
-        
-        std::cout << "ID: " << id << " silindi." << std::endl;
-    } else {
-        std::cout << "HATA: Silinecek ID (" << id << ") bulunamadi." << std::endl;
-    }
 }
 
 LinkedList<Row*>& Table::getRows() {
