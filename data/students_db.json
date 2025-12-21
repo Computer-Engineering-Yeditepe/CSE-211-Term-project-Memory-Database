@@ -1,0 +1,35 @@
+{
+    "column_types": [
+        "INT",
+        "STRING",
+        "STRING",
+        "DOUBLE"
+    ],
+    "columns": [
+        "OgrenciID",
+        "AdSoyad",
+        "Bolum",
+        "Ortalama"
+    ],
+    "rows": [
+        [
+            101,
+            "Ahmet Yilmaz",
+            "Bilgisayar Muh",
+            3.5
+        ],
+        [
+            102,
+            "Ayse Demir",
+            "Endustri Muh",
+            3.8
+        ],
+        [
+            205,
+            "Mehmet Ozturk",
+            "Elektrik Muh",
+            2.9
+        ]
+    ],
+    "table_name": "Ogrenciler"
+}
