@@ -1,10 +1,3 @@
-/**
- * @file query_engine.cpp
- * @author Öykü Aksungur
- * @brief Implementation of main query execution engine
- * @date 2025
- */
-
 #include "../../include/engine/query/query_engine.hpp"
 #include "../../include/engine/query/join_engine.hpp"
 #include "../../include/core/Table.hpp"
@@ -40,12 +33,28 @@ std::vector<std::string> Database::getTableNames() const {
     return names;
 }
 
+static int get_column_index_by_name(Table* table, const std::string& column_name) {
+    if (!table) return -1;
+    
+    const LinkedList<std::string>& columns = table->getColumns();
+    int index = 0;
+    for (auto it = columns.begin(); it != columns.end(); ++it) {
+        if (*it == column_name) {
+            return index;
+        }
+        index++;
+    }
+    return -1;
+}
+
 static bool evaluate_condition(Row* row, const QueryCondition& condition, Table* table) {
     if (!row || !table) return false;
     
-    // Get cell by index (simplified - assumes column index matches cell index)
-    // In a real implementation, you'd need a column name to index mapping
-    Cell* cell = row->getCell(0); // Simplified - use first cell
+    // Get column index by name
+    int col_idx = get_column_index_by_name(table, condition.column_name);
+    if (col_idx < 0) return false;
+    
+    Cell* cell = row->getCell(col_idx);
     if (!cell) return false;
     
     std::string cell_value;
@@ -120,16 +129,93 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
 
 Table* query_apply_select(Table* table, const std::vector<std::string>& column_names) {
     if (!table || column_names.empty()) {
-        return table; // Select all
+        return table; // Select all - return original table
     }
     
-    // Simplified - in real implementation, you'd need column mapping
+    // Get column indices for selected columns
+    std::vector<int> col_indices;
+    const LinkedList<std::string>& all_columns = table->getColumns();
+    
+    for (const auto& col_name : column_names) {
+        int idx = get_column_index_by_name(table, col_name);
+        if (idx >= 0) {
+            col_indices.push_back(idx);
+        }
+    }
+    
+    if (col_indices.empty()) {
+        return table; // No valid columns found
+    }
+    
+    // Column projection: returns original table
+    // Full projection would require creating new table with selected columns only
     return table;
 }
 
+static bool compare_rows(Row* row1, Row* row2, int col_idx, bool ascending) {
+    Cell* cell1 = row1->getCell(col_idx);
+    Cell* cell2 = row2->getCell(col_idx);
+    
+    if (!cell1 || !cell2) return false;
+    
+    bool result = false;
+    if (cell1->getType() == CellType::INT && cell2->getType() == CellType::INT) {
+        result = cell1->getInt() < cell2->getInt();
+    } else if (cell1->getType() == CellType::DOUBLE && cell2->getType() == CellType::DOUBLE) {
+        result = cell1->getDouble() < cell2->getDouble();
+    } else if (cell1->getType() == CellType::STRING && cell2->getType() == CellType::STRING) {
+        result = cell1->getString() < cell2->getString();
+    }
+    
+    return ascending ? result : !result;
+}
+
 Table* query_apply_order_by(Table* table, const std::vector<std::string>& column_names, bool ascending) {
-    // Placeholder - full sorting implementation needed
-    return table;
+    if (!table || column_names.empty()) {
+        return table;
+    }
+    
+    // Get column index for sorting
+    int col_idx = get_column_index_by_name(table, column_names[0]);
+    if (col_idx < 0) {
+        return table; // Column not found
+    }
+    
+    // Create a copy of rows for sorting
+    std::vector<Row*> rows_vec;
+    for (auto it = table->getRows().begin(); it != table->getRows().end(); ++it) {
+        rows_vec.push_back(*it);
+    }
+    
+    // Sort rows using bubble sort algorithm
+    for (size_t i = 0; i < rows_vec.size(); i++) {
+        for (size_t j = 0; j < rows_vec.size() - i - 1; j++) {
+            if (compare_rows(rows_vec[j], rows_vec[j+1], col_idx, ascending)) {
+                std::swap(rows_vec[j], rows_vec[j+1]);
+            }
+        }
+    }
+    
+    // Create new table with sorted rows
+    Table* sorted_table = new Table(table->getName() + "_sorted");
+    
+    // Copy sorted rows (create new Row objects)
+    for (Row* row : rows_vec) {
+        Row* new_row = new Row(row->getId());
+        for (auto cell_it = row->getCells().begin(); cell_it != row->getCells().end(); ++cell_it) {
+            Cell* cell = *cell_it;
+            if (cell->getType() == CellType::INT) {
+                new_row->addCell(cell->getInt());
+            } else if (cell->getType() == CellType::DOUBLE) {
+                new_row->addCell(cell->getDouble());
+            } else if (cell->getType() == CellType::STRING) {
+                new_row->addCell(cell->getString());
+            }
+        }
+        sorted_table->insert(new_row);
+    }
+    
+    return sorted_table;
 }
 
 Table* query_apply_limit(Table* table, int limit, int offset) {
