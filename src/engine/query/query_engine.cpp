@@ -8,7 +8,6 @@
 Database::Database() {}
 
 Database::~Database() {
-    // Tables are managed externally, don't delete here
 }
 
 int Database::addTable(Table* table) {
@@ -50,7 +49,7 @@ static int get_column_index_by_name(Table* table, const std::string& column_name
 static bool evaluate_condition(Row* row, const QueryCondition& condition, Table* table) {
     if (!row || !table) return false;
     
-    // Get column index by name
+
     int col_idx = get_column_index_by_name(table, condition.column_name);
     if (col_idx < 0) return false;
     
@@ -108,7 +107,6 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
         }
         
         if (matches) {
-            // Create a copy of the row
             Row* new_row = new Row(row->getId());
             for (auto cell_it = row->getCells().begin(); cell_it != row->getCells().end(); ++cell_it) {
                 Cell* cell = *cell_it;
@@ -129,6 +127,7 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
 
 Table* query_apply_select(Table* table, const std::vector<std::string>& column_names) {
     if (!table || column_names.empty()) {
+
         return table; // Select all - return original table
     }
     
@@ -149,6 +148,25 @@ Table* query_apply_select(Table* table, const std::vector<std::string>& column_n
     
     // Column projection: returns original table
     // Full projection would require creating new table with selected columns only
+
+        return table;
+    }
+    
+    std::vector<int> col_indices;
+    const LinkedList<std::string>& all_columns = table->getColumns();
+    
+    for (const auto& col_name : column_names) {
+        int idx = get_column_index_by_name(table, col_name);
+        if (idx >= 0) {
+            col_indices.push_back(idx);
+        }
+    }
+    
+    if (col_indices.empty()) {
+        return table;
+    }
+    
+
     return table;
 }
 
@@ -175,6 +193,7 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
         return table;
     }
     
+
     // Get column index for sorting
     int col_idx = get_column_index_by_name(table, column_names[0]);
     if (col_idx < 0) {
@@ -182,12 +201,21 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
     }
     
     // Create a copy of rows for sorting
+
+    int col_idx = get_column_index_by_name(table, column_names[0]);
+    if (col_idx < 0) {
+        return table;
+    }
+    
+
     std::vector<Row*> rows_vec;
     for (auto it = table->getRows().begin(); it != table->getRows().end(); ++it) {
         rows_vec.push_back(*it);
     }
     
+
     // Sort rows using bubble sort algorithm
+
     for (size_t i = 0; i < rows_vec.size(); i++) {
         for (size_t j = 0; j < rows_vec.size() - i - 1; j++) {
             if (compare_rows(rows_vec[j], rows_vec[j+1], col_idx, ascending)) {
@@ -196,10 +224,15 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
         }
     }
     
+
     // Create new table with sorted rows
     Table* sorted_table = new Table(table->getName() + "_sorted");
     
     // Copy sorted rows (create new Row objects)
+
+    Table* sorted_table = new Table(table->getName() + "_sorted");
+    
+
     for (Row* row : rows_vec) {
         Row* new_row = new Row(row->getId());
         for (auto cell_it = row->getCells().begin(); cell_it != row->getCells().end(); ++cell_it) {
@@ -222,7 +255,7 @@ Table* query_apply_limit(Table* table, int limit, int offset) {
     if (!table) return nullptr;
     
     if (limit < 0 && offset == 0) {
-        return table; // No limit
+        return table;
     }
     
     Table* result = new Table(table->getName() + "_limited");
@@ -263,13 +296,11 @@ Table* query_execute(Database* db, const Query* query) {
         return nullptr;
     }
     
-    // Get first table
     Table* result = db->getTable(query->from_tables[0]);
     if (!result) {
         return nullptr;
     }
     
-    // Apply joins
     if (!query->joins.empty()) {
         for (const auto& join : query->joins) {
             Table* right_table = db->getTable(join.right_table);
@@ -282,7 +313,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-    // Apply WHERE
     if (!query->conditions.empty()) {
         Table* filtered = query_apply_where(result, query->conditions);
         if (filtered && filtered != result) {
@@ -290,7 +320,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-    // Apply SELECT
     if (!query->select_columns.empty()) {
         Table* projected = query_apply_select(result, query->select_columns);
         if (projected && projected != result) {
@@ -298,7 +327,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-    // Apply ORDER BY
     if (!query->order_by.empty()) {
         Table* sorted = query_apply_order_by(result, query->order_by, query->order_asc);
         if (sorted && sorted != result) {
@@ -306,7 +334,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-    // Apply LIMIT
     if (query->limit >= 0 || query->offset > 0) {
         Table* limited = query_apply_limit(result, query->limit, query->offset);
         if (limited && limited != result) {
