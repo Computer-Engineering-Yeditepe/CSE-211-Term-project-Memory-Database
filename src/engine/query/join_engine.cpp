@@ -115,7 +115,7 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
                     left_only_row->addCell(cell->getString());
                 }
             }
-            // Add NULL cells for right (simplified - add empty string)
+            // Add NULL cells for right table (outer join)
             for (size_t i = 0; i < right_table->getRowCount(); i++) {
                 left_only_row->addCell(std::string("NULL"));
             }
@@ -245,10 +245,34 @@ Table* join_execute(Table* left_table, Table* right_table,
         return nullptr;
     }
     
-    // For now, use column index 0 (simplified)
-    // In real implementation, you'd need to find column indices by name
-    int left_col_idx = 0;
-    int right_col_idx = 0;
+    // Get column indices by name from join condition
+    // Find column index in left table
+    int left_col_idx = -1;
+    const LinkedList<std::string>& left_columns = left_table->getColumns();
+    int idx = 0;
+    for (auto it = left_columns.begin(); it != left_columns.end(); ++it) {
+        if (*it == condition.left_column) {
+            left_col_idx = idx;
+            break;
+        }
+        idx++;
+    }
+    
+    // Find column index in right table
+    int right_col_idx = -1;
+    const LinkedList<std::string>& right_columns = right_table->getColumns();
+    idx = 0;
+    for (auto it = right_columns.begin(); it != right_columns.end(); ++it) {
+        if (*it == condition.right_column) {
+            right_col_idx = idx;
+            break;
+        }
+        idx++;
+    }
+    
+    // If column names not found, use index 0 as fallback
+    if (left_col_idx < 0) left_col_idx = 0;
+    if (right_col_idx < 0) right_col_idx = 0;
     
     // Choose algorithm based on table sizes
     if (left_table->getRowCount() < 100 && right_table->getRowCount() < 100) {

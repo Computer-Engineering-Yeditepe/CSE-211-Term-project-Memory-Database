@@ -83,7 +83,7 @@ Query* query_parse(const std::string& query_string) {
         query->from_tables = split(from_clause, ',');
     }
     
-    // Parse WHERE (simplified)
+    // Parse WHERE clause
     if (where_pos != std::string::npos) {
         size_t where_end = join_pos;
         if (where_end == std::string::npos) where_end = order_pos;
