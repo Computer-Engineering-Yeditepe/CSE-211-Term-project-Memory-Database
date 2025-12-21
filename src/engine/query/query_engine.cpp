@@ -1,10 +1,3 @@
-/**
- * @file query_engine.cpp
- * @author Öykü Aksungur
- * @brief Implementation of main query execution engine
- * @date 2025
- */
-
 #include "../../include/engine/query/query_engine.hpp"
 #include "../../include/engine/query/join_engine.hpp"
 #include "../../include/core/Table.hpp"
@@ -40,7 +33,6 @@ std::vector<std::string> Database::getTableNames() const {
     return names;
 }
 
-// Helper function to get column index by name
 static int get_column_index_by_name(Table* table, const std::string& column_name) {
     if (!table) return -1;
     
@@ -160,7 +152,6 @@ Table* query_apply_select(Table* table, const std::vector<std::string>& column_n
     return table;
 }
 
-// Helper function to compare rows based on column values
 static bool compare_rows(Row* row1, Row* row2, int col_idx, bool ascending) {
     Cell* cell1 = row1->getCell(col_idx);
     Cell* cell2 = row2->getCell(col_idx);

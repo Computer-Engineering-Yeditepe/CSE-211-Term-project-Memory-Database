@@ -1,17 +1,9 @@
-/**
- * @file query_parser.cpp
- * @author Öykü Aksungur
- * @brief Implementation of SQL query parser
- * @date 2025
- */
-
 #include "../../include/engine/query/query_parser.hpp"
 #include "../../include/engine/query/query_types.hpp"
 #include <sstream>
 #include <algorithm>
 #include <cctype>
 
-// Helper function to trim whitespace
 static std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(' ');
     if (first == std::string::npos) return "";
@@ -19,7 +11,6 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-// Helper function to split string
 static std::vector<std::string> split(const std::string& str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
@@ -33,7 +24,6 @@ static std::vector<std::string> split(const std::string& str, char delimiter) {
     return tokens;
 }
 
-// Helper function to convert to uppercase
 static std::string toUpper(const std::string& str) {
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::toupper);
@@ -48,7 +38,6 @@ Query* query_parse(const std::string& query_string) {
     Query* query = new Query();
     std::string upper_query = toUpper(query_string);
     
-    // Simple parser implementation
     // Find SELECT clause
     size_t select_pos = upper_query.find("SELECT");
     size_t from_pos = upper_query.find("FROM");

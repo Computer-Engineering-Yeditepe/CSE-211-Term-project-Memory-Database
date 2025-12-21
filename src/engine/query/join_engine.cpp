@@ -1,10 +1,3 @@
-/**
- * @file join_engine.cpp
- * @author Öykü Aksungur
- * @brief Implementation of join operations
- * @date 2025
- */
-
 #include "../../include/engine/query/join_engine.hpp"
 #include "../../include/core/Table.hpp"
 #include "../../include/core/Row.hpp"
