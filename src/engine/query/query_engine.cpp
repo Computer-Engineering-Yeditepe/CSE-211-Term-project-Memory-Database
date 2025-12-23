@@ -1,4 +1,3 @@
-
 #include "../../include/engine/query/query_engine.hpp"
 #include "../../include/engine/query/join_engine.hpp"
 #include "../../include/core/Table.hpp"
@@ -9,38 +8,29 @@
 Database::Database() {}
 
 Database::~Database() {
-
-
 }
 
 int Database::addTable(Table* table) {
     if (!table) return -1;
-    tables[table->getName()] = table;
+    tables.insert(table->getName(), table);
     return 0;
 }
 
 Table* Database::getTable(const std::string& table_name) {
-    auto it = tables.find(table_name);
-    if (it != tables.end()) {
-        return it->second;
+    Table** found = tables.find(table_name);
+    if (found != nullptr) {
+        return *found;
     }
     return nullptr;
 }
 
-std::vector<std::string> Database::getTableNames() const {
-    std::vector<std::string> names;
-    for (const auto& pair : tables) {
-        names.push_back(pair.first);
+LinkedList<std::string> Database::getTableNames() const {
+    LinkedList<std::string> names;
+    for (auto it = tables.begin(); it != tables.end(); ++it) {
+        names.push_back((*it).key);
     }
     return names;
 }
-
-
-static bool evaluate_condition(Row* row, const QueryCondition& condition, Table* table) {
-    if (!row || !table) return false;
-    
-    
-    Cell* cell = row->getCell(0); 
 
 static int get_column_index_by_name(Table* table, const std::string& column_name) {
     if (!table) return -1;
@@ -63,7 +53,6 @@ static bool evaluate_condition(Row* row, const QueryCondition& condition, Table*
     if (col_idx < 0) return false;
     
     Cell* cell = row->getCell(col_idx);
-
     if (!cell) return false;
     
     std::string cell_value;
@@ -95,7 +84,7 @@ static bool evaluate_condition(Row* row, const QueryCondition& condition, Table*
     }
 }
 
-Table* query_apply_where(Table* table, const std::vector<QueryCondition>& conditions) {
+Table* query_apply_where(Table* table, const LinkedList<QueryCondition>& conditions) {
     if (!table || conditions.empty()) {
         return table;
     }
@@ -106,7 +95,8 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
         Row* row = *it;
         bool matches = true;
         
-        for (const auto& condition : conditions) {
+        for (auto cond_it = conditions.begin(); cond_it != conditions.end(); ++cond_it) {
+            const QueryCondition& condition = *cond_it;
             bool condition_result = evaluate_condition(row, condition, table);
             
             if (condition.logical_op == LogicalOperator::AND) {
@@ -117,7 +107,6 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
         }
         
         if (matches) {
-
             Row* new_row = new Row(row->getId());
             for (auto cell_it = row->getCells().begin(); cell_it != row->getCells().end(); ++cell_it) {
                 Cell* cell = *cell_it;
@@ -136,27 +125,16 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
     return result;
 }
 
-Table* query_apply_select(Table* table, const std::vector<std::string>& column_names) {
+Table* query_apply_select(Table* table, const LinkedList<std::string>& column_names) {
     if (!table || column_names.empty()) {
-
-        return table; // Select all
-    }
-    
-  
-    return table;
-}
-
-Table* query_apply_order_by(Table* table, const std::vector<std::string>& column_names, bool ascending) {
- 
-    return table;
-
         return table;
     }
     
-    std::vector<int> col_indices;
+    LinkedList<int> col_indices;
     const LinkedList<std::string>& all_columns = table->getColumns();
     
-    for (const auto& col_name : column_names) {
+    for (auto it = column_names.begin(); it != column_names.end(); ++it) {
+        const std::string& col_name = *it;
         int idx = get_column_index_by_name(table, col_name);
         if (idx >= 0) {
             col_indices.push_back(idx);
@@ -188,32 +166,49 @@ static bool compare_rows(Row* row1, Row* row2, int col_idx, bool ascending) {
     return ascending ? result : !result;
 }
 
-Table* query_apply_order_by(Table* table, const std::vector<std::string>& column_names, bool ascending) {
+Table* query_apply_order_by(Table* table, const LinkedList<std::string>& column_names, bool ascending) {
     if (!table || column_names.empty()) {
         return table;
     }
     
-    int col_idx = get_column_index_by_name(table, column_names[0]);
+    auto first_col_it = column_names.begin();
+    if (first_col_it == column_names.end()) {
+        return table;
+    }
+    
+    int col_idx = get_column_index_by_name(table, *first_col_it);
     if (col_idx < 0) {
         return table;
     }
     
-    std::vector<Row*> rows_vec;
+    LinkedList<Row*> rows_list;
     for (auto it = table->getRows().begin(); it != table->getRows().end(); ++it) {
-        rows_vec.push_back(*it);
+        rows_list.push_back(*it);
     }
     
-    for (size_t i = 0; i < rows_vec.size(); i++) {
-        for (size_t j = 0; j < rows_vec.size() - i - 1; j++) {
-            if (compare_rows(rows_vec[j], rows_vec[j+1], col_idx, ascending)) {
-                std::swap(rows_vec[j], rows_vec[j+1]);
+    size_t list_size = rows_list.size();
+    for (size_t i = 0; i < list_size; i++) {
+        auto it1 = rows_list.begin();
+        auto it2 = rows_list.begin();
+        ++it2;
+        
+        for (size_t j = 0; j < list_size - i - 1 && it2 != rows_list.end(); j++) {
+            Row* row1 = *it1;
+            Row* row2 = *it2;
+            if (compare_rows(row1, row2, col_idx, ascending)) {
+                Row* temp = *it1;
+                *it1 = *it2;
+                *it2 = temp;
             }
+            ++it1;
+            ++it2;
         }
     }
     
     Table* sorted_table = new Table(table->getName() + "_sorted");
     
-    for (Row* row : rows_vec) {
+    for (auto it = rows_list.begin(); it != rows_list.end(); ++it) {
+        Row* row = *it;
         Row* new_row = new Row(row->getId());
         for (auto cell_it = row->getCells().begin(); cell_it != row->getCells().end(); ++cell_it) {
             Cell* cell = *cell_it;
@@ -229,18 +224,13 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
     }
     
     return sorted_table;
-
 }
 
 Table* query_apply_limit(Table* table, int limit, int offset) {
     if (!table) return nullptr;
     
     if (limit < 0 && offset == 0) {
-
-        return table; // No limit
-
         return table;
-
     }
     
     Table* result = new Table(table->getName() + "_limited");
@@ -281,15 +271,19 @@ Table* query_execute(Database* db, const Query* query) {
         return nullptr;
     }
     
-
-    Table* result = db->getTable(query->from_tables[0]);
+    auto first_table_it = query->from_tables.begin();
+    if (first_table_it == query->from_tables.end()) {
+        return nullptr;
+    }
+    
+    Table* result = db->getTable(*first_table_it);
     if (!result) {
         return nullptr;
     }
     
-
     if (!query->joins.empty()) {
-        for (const auto& join : query->joins) {
+        for (auto it = query->joins.begin(); it != query->joins.end(); ++it) {
+            const JoinCondition& join = *it;
             Table* right_table = db->getTable(join.right_table);
             if (right_table) {
                 Table* joined = join_execute(result, right_table, join);
@@ -300,7 +294,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-
     if (!query->conditions.empty()) {
         Table* filtered = query_apply_where(result, query->conditions);
         if (filtered && filtered != result) {
@@ -308,7 +301,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-
     if (!query->select_columns.empty()) {
         Table* projected = query_apply_select(result, query->select_columns);
         if (projected && projected != result) {
@@ -316,7 +308,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-
     if (!query->order_by.empty()) {
         Table* sorted = query_apply_order_by(result, query->order_by, query->order_asc);
         if (sorted && sorted != result) {
@@ -324,7 +315,6 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
-
     if (query->limit >= 0 || query->offset > 0) {
         Table* limited = query_apply_limit(result, query->limit, query->offset);
         if (limited && limited != result) {

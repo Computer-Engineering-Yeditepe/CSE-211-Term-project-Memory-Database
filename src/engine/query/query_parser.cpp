@@ -1,10 +1,9 @@
-
 #include "../../include/engine/query/query_parser.hpp"
 #include "../../include/engine/query/query_types.hpp"
+#include "../../include/data_structures/LinkedList.hpp"
 #include <sstream>
 #include <algorithm>
 #include <cctype>
-
 
 static std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(' ');
@@ -13,9 +12,8 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-
-static std::vector<std::string> split(const std::string& str, char delimiter) {
-    std::vector<std::string> tokens;
+static LinkedList<std::string> split(const std::string& str, char delimiter) {
+    LinkedList<std::string> tokens;
     std::stringstream ss(str);
     std::string token;
     while (std::getline(ss, token, delimiter)) {
@@ -26,7 +24,6 @@ static std::vector<std::string> split(const std::string& str, char delimiter) {
     }
     return tokens;
 }
-
 
 static std::string toUpper(const std::string& str) {
     std::string result = str;
@@ -42,7 +39,6 @@ Query* query_parse(const std::string& query_string) {
     Query* query = new Query();
     std::string upper_query = toUpper(query_string);
     
-
     size_t select_pos = upper_query.find("SELECT");
     size_t from_pos = upper_query.find("FROM");
     size_t where_pos = upper_query.find("WHERE");
@@ -50,20 +46,21 @@ Query* query_parse(const std::string& query_string) {
     size_t order_pos = upper_query.find("ORDER BY");
     size_t limit_pos = upper_query.find("LIMIT");
     
-
     if (select_pos != std::string::npos && from_pos != std::string::npos) {
         std::string select_clause = query_string.substr(select_pos + 6, from_pos - select_pos - 6);
         select_clause = trim(select_clause);
         
         if (select_clause == "*") {
-
             query->select_columns.clear();
         } else {
-            query->select_columns = split(select_clause, ',');
+            LinkedList<std::string> cols = split(select_clause, ',');
+            query->select_columns.clear();
+            for (auto it = cols.begin(); it != cols.end(); ++it) {
+                query->select_columns.push_back(*it);
+            }
         }
     }
     
-
     if (from_pos != std::string::npos) {
         size_t from_end = where_pos;
         if (from_end == std::string::npos) from_end = join_pos;
@@ -73,10 +70,13 @@ Query* query_parse(const std::string& query_string) {
         
         std::string from_clause = query_string.substr(from_pos + 4, from_end - from_pos - 4);
         from_clause = trim(from_clause);
-        query->from_tables = split(from_clause, ',');
+        LinkedList<std::string> tables = split(from_clause, ',');
+        query->from_tables.clear();
+        for (auto it = tables.begin(); it != tables.end(); ++it) {
+            query->from_tables.push_back(*it);
+        }
     }
     
-
     if (where_pos != std::string::npos) {
         size_t where_end = join_pos;
         if (where_end == std::string::npos) where_end = order_pos;
@@ -86,7 +86,6 @@ Query* query_parse(const std::string& query_string) {
         std::string where_clause = query_string.substr(where_pos + 5, where_end - where_pos - 5);
         where_clause = trim(where_clause);
         
-
         size_t eq_pos = where_clause.find('=');
         if (eq_pos != std::string::npos) {
             QueryCondition condition;
@@ -98,7 +97,6 @@ Query* query_parse(const std::string& query_string) {
         }
     }
     
-
     query->order_asc = true;
     query->limit = -1;
     query->offset = 0;
@@ -120,21 +118,22 @@ void query_print(const Query* query) {
     if (query->select_columns.empty()) {
         std::cout << "*\n";
     } else {
-        for (const auto& col : query->select_columns) {
-            std::cout << col << " ";
+        for (auto it = query->select_columns.begin(); it != query->select_columns.end(); ++it) {
+            std::cout << *it << " ";
         }
         std::cout << "\n";
     }
     
     std::cout << "  FROM: ";
-    for (const auto& table : query->from_tables) {
-        std::cout << table << " ";
+    for (auto it = query->from_tables.begin(); it != query->from_tables.end(); ++it) {
+        std::cout << *it << " ";
     }
     std::cout << "\n";
     
     if (!query->conditions.empty()) {
         std::cout << "  WHERE: ";
-        for (const auto& cond : query->conditions) {
+        for (auto it = query->conditions.begin(); it != query->conditions.end(); ++it) {
+            const QueryCondition& cond = *it;
             std::cout << cond.column_name << " = " << cond.value << " ";
         }
         std::cout << "\n";
