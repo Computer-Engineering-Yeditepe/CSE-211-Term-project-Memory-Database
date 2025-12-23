@@ -53,5 +53,5 @@ struct Query {
     int offset;
 };
 
-#endif // QUERY_TYPES_HPP
+#endif
 

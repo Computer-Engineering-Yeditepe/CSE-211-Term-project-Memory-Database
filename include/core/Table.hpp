@@ -9,9 +9,14 @@
 class Table {
 private:
     std::string name;
+
     
     // ÖNEMLİ: Row içinde pointerlar olduğu için burada Row* tutuyoruz.
     // Row nesnelerini kopyalamak tehlikeli olabilir.
+
+    LinkedList<std::string> columns;
+    LinkedList<std::string> types;
+
     LinkedList<Row*> rows; 
 
 public:

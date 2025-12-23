@@ -100,7 +100,8 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
                 } else if (cell->getType() == CellType::STRING) {
                     left_only_row->addCell(cell->getString());
                 }
-        
+
+            }
 
             for (size_t i = 0; i < right_table->getRowCount(); i++) {
                 left_only_row->addCell(std::string("NULL"));
@@ -237,7 +238,7 @@ Table* join_execute(Table* left_table, Table* right_table,
         idx++;
     }
     
-<
+
     int right_col_idx = -1;
     const LinkedList<std::string>& right_columns = right_table->getColumns();
     idx = 0;

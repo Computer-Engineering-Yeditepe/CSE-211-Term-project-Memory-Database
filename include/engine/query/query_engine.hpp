@@ -25,5 +25,5 @@ Table* query_apply_select(Table* table, const std::vector<std::string>& column_n
 Table* query_apply_order_by(Table* table, const std::vector<std::string>& column_names, bool ascending);
 Table* query_apply_limit(Table* table, int limit, int offset);
 
-#endif // QUERY_ENGINE_HPP
+#endif
 

@@ -8,5 +8,5 @@ Query* query_parse(const std::string& query_string);
 void query_destroy(Query* query);
 void query_print(const Query* query);
 
-#endif // QUERY_PARSER_HPP
+#endif
 

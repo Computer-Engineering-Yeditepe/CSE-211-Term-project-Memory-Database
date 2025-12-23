@@ -128,6 +128,7 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
 Table* query_apply_select(Table* table, const std::vector<std::string>& column_names) {
     if (!table || column_names.empty()) {
 
+
         return table; // Select all - return original table
     }
     
@@ -148,6 +149,25 @@ Table* query_apply_select(Table* table, const std::vector<std::string>& column_n
     
     // Column projection: returns original table
     // Full projection would require creating new table with selected columns only
+
+        return table;
+    }
+    
+    std::vector<int> col_indices;
+    const LinkedList<std::string>& all_columns = table->getColumns();
+    
+    for (const auto& col_name : column_names) {
+        int idx = get_column_index_by_name(table, col_name);
+        if (idx >= 0) {
+            col_indices.push_back(idx);
+        }
+    }
+    
+    if (col_indices.empty()) {
+        return table;
+    }
+    
+
 
         return table;
     }
@@ -194,6 +214,7 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
     }
     
 
+
     // Get column index for sorting
     int col_idx = get_column_index_by_name(table, column_names[0]);
     if (col_idx < 0) {
@@ -201,6 +222,7 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
     }
     
     // Create a copy of rows for sorting
+
 
     int col_idx = get_column_index_by_name(table, column_names[0]);
     if (col_idx < 0) {
@@ -214,8 +236,6 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
     }
     
 
-    // Sort rows using bubble sort algorithm
-
     for (size_t i = 0; i < rows_vec.size(); i++) {
         for (size_t j = 0; j < rows_vec.size() - i - 1; j++) {
             if (compare_rows(rows_vec[j], rows_vec[j+1], col_idx, ascending)) {
@@ -225,10 +245,15 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
     }
     
 
+
     // Create new table with sorted rows
     Table* sorted_table = new Table(table->getName() + "_sorted");
     
     // Copy sorted rows (create new Row objects)
+
+    Table* sorted_table = new Table(table->getName() + "_sorted");
+    
+
 
     Table* sorted_table = new Table(table->getName() + "_sorted");
     
