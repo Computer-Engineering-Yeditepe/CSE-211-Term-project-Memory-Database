@@ -1,9 +1,12 @@
+
 #include "../../include/engine/query/join_engine.hpp"
 #include "../../include/core/Table.hpp"
 #include "../../include/core/Row.hpp"
 #include "../../include/core/Cell.hpp"
 #include <map>
 #include <string>
+
+
 
 struct HashEntry {
     Row* row;
@@ -29,6 +32,7 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
     
     Table* result = new Table("join_result");
     
+
     for (auto left_it = left_table->getRows().begin(); left_it != left_table->getRows().end(); ++left_it) {
         Row* left_row = *left_it;
         Cell* left_cell = left_row->getCell(left_column_index);
@@ -60,8 +64,15 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
             }
             
             if (left_key == right_key) {
+
+                // Create joined row
                 Row* joined_row = new Row(left_row->getId());
                 
+                // Add left row cells
+
+                Row* joined_row = new Row(left_row->getId());
+                
+
                 for (auto cell_it = left_row->getCells().begin(); cell_it != left_row->getCells().end(); ++cell_it) {
                     Cell* cell = *cell_it;
                     if (cell->getType() == CellType::INT) {
@@ -73,6 +84,7 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
                     }
                 }
                 
+
                 for (auto cell_it = right_row->getCells().begin(); cell_it != right_row->getCells().end(); ++cell_it) {
                     Cell* cell = *cell_it;
                     if (cell->getType() == CellType::INT) {
@@ -91,6 +103,10 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
         
         if (!matched && (join_type == JoinType::LEFT || join_type == JoinType::FULL)) {
             Row* left_only_row = new Row(left_row->getId());
+
+        if (!matched && (join_type == JoinType::LEFT || join_type == JoinType::FULL)) {
+            Row* left_only_row = new Row(left_row->getId());
+
             for (auto cell_it = left_row->getCells().begin(); cell_it != left_row->getCells().end(); ++cell_it) {
                 Cell* cell = *cell_it;
                 if (cell->getType() == CellType::INT) {
@@ -101,6 +117,7 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
                     left_only_row->addCell(cell->getString());
                 }
             }
+
             for (size_t i = 0; i < right_table->getRowCount(); i++) {
                 left_only_row->addCell(std::string("NULL"));
             }
@@ -121,6 +138,7 @@ Table* join_hash(Table* left_table, Table* right_table,
     const size_t bucket_count = 1009;
     HashEntry** hash_table = new HashEntry*[bucket_count]();
     
+
     for (auto it = left_table->getRows().begin(); it != left_table->getRows().end(); ++it) {
         Row* row = *it;
         Cell* cell = row->getCell(left_column_index);
@@ -141,6 +159,7 @@ Table* join_hash(Table* left_table, Table* right_table,
         hash_table[idx] = entry;
     }
     
+
     Table* result = new Table("join_result");
     
     for (auto it = right_table->getRows().begin(); it != right_table->getRows().end(); ++it) {
@@ -173,8 +192,13 @@ Table* join_hash(Table* left_table, Table* right_table,
                 }
                 
                 if (left_key == key) {
+
                     Row* joined_row = new Row(left_row->getId());
                     
+
+                    Row* joined_row = new Row(left_row->getId());
+                    
+
                     for (auto cell_it = left_row->getCells().begin(); cell_it != left_row->getCells().end(); ++cell_it) {
                         Cell* cell = *cell_it;
                         if (cell->getType() == CellType::INT) {
@@ -186,6 +210,7 @@ Table* join_hash(Table* left_table, Table* right_table,
                         }
                     }
                     
+
                     for (auto cell_it = right_row->getCells().begin(); cell_it != right_row->getCells().end(); ++cell_it) {
                         Cell* cell = *cell_it;
                         if (cell->getType() == CellType::INT) {
@@ -205,6 +230,7 @@ Table* join_hash(Table* left_table, Table* right_table,
         }
     }
     
+
     for (size_t i = 0; i < bucket_count; i++) {
         HashEntry* entry = hash_table[i];
         while (entry) {
@@ -224,6 +250,11 @@ Table* join_execute(Table* left_table, Table* right_table,
         return nullptr;
     }
     
+
+    int left_col_idx = 0;
+    int right_col_idx = 0;
+    
+
     int left_col_idx = -1;
     const LinkedList<std::string>& left_columns = left_table->getColumns();
     int idx = 0;
@@ -248,7 +279,7 @@ Table* join_execute(Table* left_table, Table* right_table,
     
     if (left_col_idx < 0) left_col_idx = 0;
     if (right_col_idx < 0) right_col_idx = 0;
-    
+
     if (left_table->getRowCount() < 100 && right_table->getRowCount() < 100) {
         return join_nested_loop(left_table, right_table, left_col_idx, right_col_idx, condition.join_type);
     } else {

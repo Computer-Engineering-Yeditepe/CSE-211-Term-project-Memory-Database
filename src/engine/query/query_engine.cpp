@@ -1,3 +1,4 @@
+
 #include "../../include/engine/query/query_engine.hpp"
 #include "../../include/engine/query/join_engine.hpp"
 #include "../../include/core/Table.hpp"
@@ -8,6 +9,8 @@
 Database::Database() {}
 
 Database::~Database() {
+
+
 }
 
 int Database::addTable(Table* table) {
@@ -32,6 +35,13 @@ std::vector<std::string> Database::getTableNames() const {
     return names;
 }
 
+
+static bool evaluate_condition(Row* row, const QueryCondition& condition, Table* table) {
+    if (!row || !table) return false;
+    
+    
+    Cell* cell = row->getCell(0); 
+
 static int get_column_index_by_name(Table* table, const std::string& column_name) {
     if (!table) return -1;
     
@@ -53,6 +63,7 @@ static bool evaluate_condition(Row* row, const QueryCondition& condition, Table*
     if (col_idx < 0) return false;
     
     Cell* cell = row->getCell(col_idx);
+
     if (!cell) return false;
     
     std::string cell_value;
@@ -106,6 +117,7 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
         }
         
         if (matches) {
+
             Row* new_row = new Row(row->getId());
             for (auto cell_it = row->getCells().begin(); cell_it != row->getCells().end(); ++cell_it) {
                 Cell* cell = *cell_it;
@@ -126,6 +138,18 @@ Table* query_apply_where(Table* table, const std::vector<QueryCondition>& condit
 
 Table* query_apply_select(Table* table, const std::vector<std::string>& column_names) {
     if (!table || column_names.empty()) {
+
+        return table; // Select all
+    }
+    
+  
+    return table;
+}
+
+Table* query_apply_order_by(Table* table, const std::vector<std::string>& column_names, bool ascending) {
+ 
+    return table;
+
         return table;
     }
     
@@ -205,13 +229,18 @@ Table* query_apply_order_by(Table* table, const std::vector<std::string>& column
     }
     
     return sorted_table;
+
 }
 
 Table* query_apply_limit(Table* table, int limit, int offset) {
     if (!table) return nullptr;
     
     if (limit < 0 && offset == 0) {
+
+        return table; // No limit
+
         return table;
+
     }
     
     Table* result = new Table(table->getName() + "_limited");
@@ -252,11 +281,13 @@ Table* query_execute(Database* db, const Query* query) {
         return nullptr;
     }
     
+
     Table* result = db->getTable(query->from_tables[0]);
     if (!result) {
         return nullptr;
     }
     
+
     if (!query->joins.empty()) {
         for (const auto& join : query->joins) {
             Table* right_table = db->getTable(join.right_table);
@@ -269,6 +300,7 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
+
     if (!query->conditions.empty()) {
         Table* filtered = query_apply_where(result, query->conditions);
         if (filtered && filtered != result) {
@@ -276,6 +308,7 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
+
     if (!query->select_columns.empty()) {
         Table* projected = query_apply_select(result, query->select_columns);
         if (projected && projected != result) {
@@ -283,6 +316,7 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
+
     if (!query->order_by.empty()) {
         Table* sorted = query_apply_order_by(result, query->order_by, query->order_asc);
         if (sorted && sorted != result) {
@@ -290,6 +324,7 @@ Table* query_execute(Database* db, const Query* query) {
         }
     }
     
+
     if (query->limit >= 0 || query->offset > 0) {
         Table* limited = query_apply_limit(result, query->limit, query->offset);
         if (limited && limited != result) {
