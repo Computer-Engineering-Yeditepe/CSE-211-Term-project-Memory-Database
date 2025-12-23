@@ -1,5 +1,6 @@
 #include "../../include/engine/query/query_parser.hpp"
 #include "../../include/engine/query/query_types.hpp"
+#include "../../include/data_structures/LinkedList.hpp"
 #include <sstream>
 #include <algorithm>
 #include <cctype>
@@ -11,8 +12,8 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-static std::vector<std::string> split(const std::string& str, char delimiter) {
-    std::vector<std::string> tokens;
+static LinkedList<std::string> split(const std::string& str, char delimiter) {
+    LinkedList<std::string> tokens;
     std::stringstream ss(str);
     std::string token;
     while (std::getline(ss, token, delimiter)) {
@@ -52,7 +53,11 @@ Query* query_parse(const std::string& query_string) {
         if (select_clause == "*") {
             query->select_columns.clear();
         } else {
-            query->select_columns = split(select_clause, ',');
+            LinkedList<std::string> cols = split(select_clause, ',');
+            query->select_columns.clear();
+            for (auto it = cols.begin(); it != cols.end(); ++it) {
+                query->select_columns.push_back(*it);
+            }
         }
     }
     
@@ -65,7 +70,11 @@ Query* query_parse(const std::string& query_string) {
         
         std::string from_clause = query_string.substr(from_pos + 4, from_end - from_pos - 4);
         from_clause = trim(from_clause);
-        query->from_tables = split(from_clause, ',');
+        LinkedList<std::string> tables = split(from_clause, ',');
+        query->from_tables.clear();
+        for (auto it = tables.begin(); it != tables.end(); ++it) {
+            query->from_tables.push_back(*it);
+        }
     }
     
     if (where_pos != std::string::npos) {
@@ -109,21 +118,22 @@ void query_print(const Query* query) {
     if (query->select_columns.empty()) {
         std::cout << "*\n";
     } else {
-        for (const auto& col : query->select_columns) {
-            std::cout << col << " ";
+        for (auto it = query->select_columns.begin(); it != query->select_columns.end(); ++it) {
+            std::cout << *it << " ";
         }
         std::cout << "\n";
     }
     
     std::cout << "  FROM: ";
-    for (const auto& table : query->from_tables) {
-        std::cout << table << " ";
+    for (auto it = query->from_tables.begin(); it != query->from_tables.end(); ++it) {
+        std::cout << *it << " ";
     }
     std::cout << "\n";
     
     if (!query->conditions.empty()) {
         std::cout << "  WHERE: ";
-        for (const auto& cond : query->conditions) {
+        for (auto it = query->conditions.begin(); it != query->conditions.end(); ++it) {
+            const QueryCondition& cond = *it;
             std::cout << cond.column_name << " = " << cond.value << " ";
         }
         std::cout << "\n";

@@ -2,7 +2,7 @@
 #define QUERY_TYPES_HPP
 
 #include <string>
-#include <vector>
+#include "../../data_structures/LinkedList.hpp"
 
 enum class JoinType {
     INNER,
@@ -43,11 +43,11 @@ struct JoinCondition {
 };
 
 struct Query {
-    std::vector<std::string> select_columns;
-    std::vector<std::string> from_tables;
-    std::vector<QueryCondition> conditions;
-    std::vector<JoinCondition> joins;
-    std::vector<std::string> order_by;
+    LinkedList<std::string> select_columns;
+    LinkedList<std::string> from_tables;
+    LinkedList<QueryCondition> conditions;
+    LinkedList<JoinCondition> joins;
+    LinkedList<std::string> order_by;
     bool order_asc;
     int limit;
     int offset;
