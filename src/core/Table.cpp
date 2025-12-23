@@ -25,6 +25,8 @@ Table::Table(const std::string& tableName, const LinkedList<std::string>& colNam
     : primaryIndex(16) {
     this->name = tableName;
     
+    this->bTreeIndex = new index::BPlusTree(4);
+
     for(const auto& col : colNames) this->columns.push_back(col);
     for(const auto& type : colTypes) this->types.push_back(type);
 
@@ -40,25 +42,34 @@ Table::~Table() {
     for (auto it = rows.begin(); it != rows.end(); ++it) {
         delete *it; // *it bize Row* verir
     }
+
     // LinkedList'in kendi destructor'ı node'ları temizler, biz içeriği temizledik.
+
+    delete bTreeIndex;
+
 }
 
 void Table::insert(Row* row) {
     rows.push_back(row);
 
     primaryIndex.insert(row->getId(), row);
+
+    index::RecordID record = {0, 0, row};
+    bTreeIndex->insert(row->getId(), record);
 }
 
 Row* Table::getRowById(int id) { return primaryIndex.search(id);}
 
 void Table::removeRow(int id) {
-    // Silinecek satırı önce bulalım
+
     Row* rowToDelete = primaryIndex.search(id);
     
     if (rowToDelete != nullptr) {
         primaryIndex.remove(id);
 
         rows.remove(rowToDelete); 
+
+        bTreeIndex->remove(id);
 
         delete rowToDelete;
         
@@ -160,6 +171,8 @@ void Table::hashJoin(Table& otherTable, int myColIndex, int otherColIndex) {
             delete toDelete;
         }
     }
+    std::cout << "\n--- Index Yapisi (B+ Tree) ---" << std::endl;
+    bTreeIndex->print();
     std::cout << "====================================" << std::endl;
 }
 

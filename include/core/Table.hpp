@@ -10,6 +10,7 @@
 
 #include "../data_structures/LinkedList.hpp"
 #include "../index/HashIndex.hpp"
+#include "../index/BPlusTree.hpp"
 #include "Row.hpp"
 
 class Table {
@@ -28,6 +29,7 @@ private:
     
     LinkedList<Row*> rows;
     HashIndex<int> primaryIndex;
+    index::BPlusTree* bTreeIndex;
 
 
 public:
@@ -45,6 +47,8 @@ public:
     void removeRow(int id);
     
     void print() const;
+
+    index::BPlusTree* getBTree() { return bTreeIndex; }
     
     size_t getRowCount() const;
 
