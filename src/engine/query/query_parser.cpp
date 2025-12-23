@@ -1,9 +1,3 @@
-/**
- * @file query_parser.cpp
- * @author Öykü Aksungur
- * @brief Implementation of SQL query parser
- * @date 2025
- */
 
 #include "../../include/engine/query/query_parser.hpp"
 #include "../../include/engine/query/query_types.hpp"
@@ -11,7 +5,7 @@
 #include <algorithm>
 #include <cctype>
 
-// Helper function to trim whitespace
+
 static std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(' ');
     if (first == std::string::npos) return "";
@@ -19,7 +13,7 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-// Helper function to split string
+
 static std::vector<std::string> split(const std::string& str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
@@ -33,7 +27,7 @@ static std::vector<std::string> split(const std::string& str, char delimiter) {
     return tokens;
 }
 
-// Helper function to convert to uppercase
+
 static std::string toUpper(const std::string& str) {
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::toupper);
@@ -48,8 +42,7 @@ Query* query_parse(const std::string& query_string) {
     Query* query = new Query();
     std::string upper_query = toUpper(query_string);
     
-    // Simple parser implementation
-    // Find SELECT clause
+
     size_t select_pos = upper_query.find("SELECT");
     size_t from_pos = upper_query.find("FROM");
     size_t where_pos = upper_query.find("WHERE");
@@ -57,20 +50,20 @@ Query* query_parse(const std::string& query_string) {
     size_t order_pos = upper_query.find("ORDER BY");
     size_t limit_pos = upper_query.find("LIMIT");
     
-    // Parse SELECT
+
     if (select_pos != std::string::npos && from_pos != std::string::npos) {
         std::string select_clause = query_string.substr(select_pos + 6, from_pos - select_pos - 6);
         select_clause = trim(select_clause);
         
         if (select_clause == "*") {
-            // Select all - empty vector means select all
+
             query->select_columns.clear();
         } else {
             query->select_columns = split(select_clause, ',');
         }
     }
     
-    // Parse FROM
+
     if (from_pos != std::string::npos) {
         size_t from_end = where_pos;
         if (from_end == std::string::npos) from_end = join_pos;
@@ -83,7 +76,7 @@ Query* query_parse(const std::string& query_string) {
         query->from_tables = split(from_clause, ',');
     }
     
-    // Parse WHERE (simplified)
+
     if (where_pos != std::string::npos) {
         size_t where_end = join_pos;
         if (where_end == std::string::npos) where_end = order_pos;
@@ -93,7 +86,7 @@ Query* query_parse(const std::string& query_string) {
         std::string where_clause = query_string.substr(where_pos + 5, where_end - where_pos - 5);
         where_clause = trim(where_clause);
         
-        // Simple WHERE parsing (column = value)
+
         size_t eq_pos = where_clause.find('=');
         if (eq_pos != std::string::npos) {
             QueryCondition condition;
@@ -105,7 +98,7 @@ Query* query_parse(const std::string& query_string) {
         }
     }
     
-    // Initialize defaults
+
     query->order_asc = true;
     query->limit = -1;
     query->offset = 0;
