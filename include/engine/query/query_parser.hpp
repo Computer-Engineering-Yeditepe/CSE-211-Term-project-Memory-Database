@@ -9,4 +9,3 @@ void query_destroy(Query* query);
 void query_print(const Query* query);
 
 #endif
-

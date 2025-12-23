@@ -26,4 +26,3 @@ Table* query_apply_order_by(Table* table, const LinkedList<std::string>& column_
 Table* query_apply_limit(Table* table, int limit, int offset);
 
 #endif
-

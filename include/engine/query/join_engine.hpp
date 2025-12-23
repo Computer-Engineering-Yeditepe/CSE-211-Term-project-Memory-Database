@@ -17,4 +17,3 @@ Table* join_execute(Table* left_table, Table* right_table,
                     const JoinCondition& condition);
 
 #endif
-
