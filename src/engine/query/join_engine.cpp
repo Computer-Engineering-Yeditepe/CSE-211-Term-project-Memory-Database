@@ -18,7 +18,9 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
         return nullptr;
     }
     
-    Table* result = new Table("join_result");
+    LinkedList<std::string> empty_cols;
+    LinkedList<std::string> empty_types;
+    Table* result = new Table("join_result", empty_cols, empty_types);
     
     for (auto left_it = left_table->getRows().begin(); left_it != left_table->getRows().end(); ++left_it) {
         Row* left_row = *left_it;
@@ -75,7 +77,7 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
                     }
                 }
                 
-                result->insert(joined_row);
+                result->insertRow(joined_row);
                 matched = true;
             }
         }
@@ -95,7 +97,7 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
             for (size_t i = 0; i < right_table->getRowCount(); i++) {
                 left_only_row->addCell(std::string("NULL"));
             }
-            result->insert(left_only_row);
+            result->insertRow(left_only_row);
         }
     }
     
@@ -120,7 +122,9 @@ Table* join_hash(Table* left_table, Table* right_table,
         hash_list.push_back(entry);
     }
     
-    Table* result = new Table("join_result");
+    LinkedList<std::string> empty_cols;
+    LinkedList<std::string> empty_types;
+    Table* result = new Table("join_result", empty_cols, empty_types);
     
     for (auto it = right_table->getRows().begin(); it != right_table->getRows().end(); ++it) {
         Row* right_row = *it;
@@ -174,7 +178,7 @@ Table* join_hash(Table* left_table, Table* right_table,
                         }
                     }
                     
-                    result->insert(joined_row);
+                    result->insertRow(joined_row);
                 }
             }
         }

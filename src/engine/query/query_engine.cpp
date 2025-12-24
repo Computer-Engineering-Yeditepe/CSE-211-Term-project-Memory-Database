@@ -89,7 +89,9 @@ Table* query_apply_where(Table* table, const LinkedList<QueryCondition>& conditi
         return table;
     }
     
-    Table* result = new Table(table->getName() + "_filtered");
+    LinkedList<std::string> empty_cols;
+    LinkedList<std::string> empty_types;
+    Table* result = new Table(table->getName() + "_filtered", empty_cols, empty_types);
     
     for (auto it = table->getRows().begin(); it != table->getRows().end(); ++it) {
         Row* row = *it;
@@ -118,7 +120,7 @@ Table* query_apply_where(Table* table, const LinkedList<QueryCondition>& conditi
                     new_row->addCell(cell->getString());
                 }
             }
-            result->insert(new_row);
+            result->insertRow(new_row);
         }
     }
     
@@ -205,7 +207,9 @@ Table* query_apply_order_by(Table* table, const LinkedList<std::string>& column_
         }
     }
     
-    Table* sorted_table = new Table(table->getName() + "_sorted");
+    LinkedList<std::string> empty_cols;
+    LinkedList<std::string> empty_types;
+    Table* sorted_table = new Table(table->getName() + "_sorted", empty_cols, empty_types);
     
     for (auto it = rows_list.begin(); it != rows_list.end(); ++it) {
         Row* row = *it;
@@ -220,7 +224,7 @@ Table* query_apply_order_by(Table* table, const LinkedList<std::string>& column_
                 new_row->addCell(cell->getString());
             }
         }
-        sorted_table->insert(new_row);
+        sorted_table->insertRow(new_row);
     }
     
     return sorted_table;
@@ -233,7 +237,9 @@ Table* query_apply_limit(Table* table, int limit, int offset) {
         return table;
     }
     
-    Table* result = new Table(table->getName() + "_limited");
+    LinkedList<std::string> empty_cols;
+    LinkedList<std::string> empty_types;
+    Table* result = new Table(table->getName() + "_limited", empty_cols, empty_types);
     int skipped = 0;
     int taken = 0;
     
@@ -256,7 +262,7 @@ Table* query_apply_limit(Table* table, int limit, int offset) {
                     new_row->addCell(cell->getString());
                 }
             }
-            result->insert(new_row);
+            result->insertRow(new_row);
             taken++;
         } else {
             break;
