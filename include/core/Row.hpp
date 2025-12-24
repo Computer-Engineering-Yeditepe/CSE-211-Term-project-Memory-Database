@@ -20,9 +20,9 @@ public:
 
     Cell* getCell(size_t index);
     int getId() const;
-
-    
     LinkedList<Cell*>& getCells() { return cells; }
+
+    void print();
 };
 
 #endif
