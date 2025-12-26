@@ -23,7 +23,7 @@ void Table::insertRow(Row* row) {
 
     primaryIndex.insert(row->getId(), row);
 
-    index::RecordID record = {0, 0, row};
+    index::RecordID record(0,0,row);
     bTreeIndex->insert(row->getId(), record);
 }
 
