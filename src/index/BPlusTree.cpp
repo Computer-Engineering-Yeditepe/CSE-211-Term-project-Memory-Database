@@ -1,7 +1,7 @@
 /**
  * @file BPlusTree.cpp
  * @brief Implementation of B+ Tree data structure for database indexing
- * @author Ece Nur Güner
+ * @author Ece Güner
  * @date 2025
  */
 
