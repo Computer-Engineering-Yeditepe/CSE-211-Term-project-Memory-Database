@@ -110,48 +110,6 @@ public:
     Iterator end() {
         return Iterator(entries.end());
     }
-
-    class ConstIterator {
-    private:
-        // LinkedList'in de ConstIterator'a sahip olduğunu varsayıyoruz.
-        typename LinkedList<KeyValuePair>::ConstIterator list_it;
-        
-    public:
-        ConstIterator(typename LinkedList<KeyValuePair>::ConstIterator it) : list_it(it) {}
-        
-        
-        struct KeyValue {
-            K key;
-            V value;
-        };
-
-        KeyValue operator*() const {
-            // const referans alıyoruz
-            const KeyValuePair& pair = *list_it;
-            return {pair.key, pair.value};
-        }
-        
-        ConstIterator& operator++() {
-            ++list_it;
-            return *this;
-        }
-        
-        bool operator==(const ConstIterator& other) const {
-            return list_it == other.list_it;
-        }
-        
-        bool operator!=(const ConstIterator& other) const {
-            return list_it != other.list_it;
-        }
-    };
-
-    ConstIterator begin() const {
-        return ConstIterator(entries.begin());
-    }
-    
-    ConstIterator end() const {
-        return ConstIterator(entries.end());
-    }
 };
 
 #endif

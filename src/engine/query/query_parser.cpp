@@ -9,6 +9,15 @@
 #include <algorithm>
 #include <cctype>
 
+/**
+ * @brief String'in başındaki ve sonundaki whitespace karakterlerini temizler
+ * 
+ * Bu yardımcı fonksiyon, string'in başındaki ve sonundaki boşluk,
+ * tab, yeni satır gibi karakterleri kaldırır.
+ * 
+ * @param str Temizlenecek string
+ * @return Temizlenmiş string
+ */
 static std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(" \t\r\n");
     if (first == std::string::npos) return "";
@@ -16,6 +25,16 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
+/**
+ * @brief String'i belirtilen delimiter karakterine göre böler
+ * 
+ * Bu yardımcı fonksiyon, string'i delimiter karakterine göre parçalara ayırır
+ * ve her parçayı trim ederek LinkedList'e ekler.
+ * 
+ * @param str Bölünecek string
+ * @param delimiter Ayırıcı karakter (örn: ',', ' ', '=')
+ * @return Bölünmüş string'lerin listesi
+ */
 static LinkedList<std::string> split(const std::string& str, char delimiter) {
     LinkedList<std::string> tokens;
     std::stringstream ss(str);
@@ -29,12 +48,37 @@ static LinkedList<std::string> split(const std::string& str, char delimiter) {
     return tokens;
 }
 
+/**
+ * @brief String'i büyük harfe çevirir
+ * 
+ * Bu yardımcı fonksiyon, string'deki tüm karakterleri büyük harfe dönüştürür.
+ * Case-insensitive parsing için kullanılır.
+ * 
+ * @param str Dönüştürülecek string
+ * @return Büyük harfe çevrilmiş string
+ */
 static std::string toUpper(const std::string& str) {
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::toupper);
     return result;
 }
 
+/**
+ * @brief SQL benzeri query string'ini parse eder ve Query yapısına dönüştürür
+ * 
+ * Bu fonksiyon, SELECT, FROM, WHERE, JOIN, ORDER BY, LIMIT gibi SQL clause'larını
+ * parse eder ve Query yapısını doldurur.
+ * 
+ * Desteklenen SQL yapıları:
+ * - SELECT column1, column2 FROM table
+ * - WHERE column = value (>, <, >=, <=, !=, = operatörleri)
+ * - JOIN table ON left_column = right_column
+ * - ORDER BY column (şu an parse edilir ama sıralama yapılmaz)
+ * - LIMIT n OFFSET m
+ * 
+ * @param query_string Parse edilecek SQL query string'i
+ * @return Parse edilmiş Query pointer'ı, hata durumunda nullptr
+ */
 Query* query_parse(const std::string& query_string) {
     if (query_string.empty()) return nullptr;
     
@@ -139,6 +183,14 @@ Query* query_parse(const std::string& query_string) {
     return query;
 }
 
+/**
+ * @brief Query yapısını ve içindeki tüm verileri bellekten siler
+ * 
+ * Bu fonksiyon, dinamik olarak oluşturulmuş Query yapısını temizler.
+ * Memory leak'leri önlemek için query kullanıldıktan sonra mutlaka çağrılmalıdır.
+ * 
+ * @param query Silinecek Query pointer'ı
+ */
 void query_destroy(Query* query) {
     if (query) delete query;
 }

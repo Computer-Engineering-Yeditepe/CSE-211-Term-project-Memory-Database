@@ -199,3 +199,7 @@ coverage.info
 # ============================================================================
 valgrind-out.txt
 vgcore.*
+
+test_hash.cpp
+test_join.cpp
+test_hash.exe
