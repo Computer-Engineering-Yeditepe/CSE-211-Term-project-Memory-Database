@@ -1,17 +1,40 @@
-#include "../../include/engine/query/query_parser.hpp"
-#include "../../include/engine/query/query_types.hpp"
-#include "../../include/data_structures/LinkedList.hpp"
+/**
+ * src/engine/query/query_parser.cpp
+ * JOIN PARSING EKLENMİŞ SÜRÜM
+ */
+#include "../../../include/engine/query/query_parser.hpp"
+#include "../../../include/engine/query/query_types.hpp"
+#include "../../../include/data_structures/LinkedList.hpp"
 #include <sstream>
 #include <algorithm>
 #include <cctype>
 
+/**
+ * @brief String'in başındaki ve sonundaki whitespace karakterlerini temizler
+ * 
+ * Bu yardımcı fonksiyon, string'in başındaki ve sonundaki boşluk,
+ * tab, yeni satır gibi karakterleri kaldırır.
+ * 
+ * @param str Temizlenecek string
+ * @return Temizlenmiş string
+ */
 static std::string trim(const std::string& str) {
-    size_t first = str.find_first_not_of(' ');
+    size_t first = str.find_first_not_of(" \t\r\n");
     if (first == std::string::npos) return "";
-    size_t last = str.find_last_not_of(' ');
+    size_t last = str.find_last_not_of(" \t\r\n");
     return str.substr(first, (last - first + 1));
 }
 
+/**
+ * @brief String'i belirtilen delimiter karakterine göre böler
+ * 
+ * Bu yardımcı fonksiyon, string'i delimiter karakterine göre parçalara ayırır
+ * ve her parçayı trim ederek LinkedList'e ekler.
+ * 
+ * @param str Bölünecek string
+ * @param delimiter Ayırıcı karakter (örn: ',', ' ', '=')
+ * @return Bölünmüş string'lerin listesi
+ */
 static LinkedList<std::string> split(const std::string& str, char delimiter) {
     LinkedList<std::string> tokens;
     std::stringstream ss(str);
@@ -25,16 +48,39 @@ static LinkedList<std::string> split(const std::string& str, char delimiter) {
     return tokens;
 }
 
+/**
+ * @brief String'i büyük harfe çevirir
+ * 
+ * Bu yardımcı fonksiyon, string'deki tüm karakterleri büyük harfe dönüştürür.
+ * Case-insensitive parsing için kullanılır.
+ * 
+ * @param str Dönüştürülecek string
+ * @return Büyük harfe çevrilmiş string
+ */
 static std::string toUpper(const std::string& str) {
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::toupper);
     return result;
 }
 
+/**
+ * @brief SQL benzeri query string'ini parse eder ve Query yapısına dönüştürür
+ * 
+ * Bu fonksiyon, SELECT, FROM, WHERE, JOIN, ORDER BY, LIMIT gibi SQL clause'larını
+ * parse eder ve Query yapısını doldurur.
+ * 
+ * Desteklenen SQL yapıları:
+ * - SELECT column1, column2 FROM table
+ * - WHERE column = value (>, <, >=, <=, !=, = operatörleri)
+ * - JOIN table ON left_column = right_column
+ * - ORDER BY column (şu an parse edilir ama sıralama yapılmaz)
+ * - LIMIT n OFFSET m
+ * 
+ * @param query_string Parse edilecek SQL query string'i
+ * @return Parse edilmiş Query pointer'ı, hata durumunda nullptr
+ */
 Query* query_parse(const std::string& query_string) {
-    if (query_string.empty()) {
-        return nullptr;
-    }
+    if (query_string.empty()) return nullptr;
     
     Query* query = new Query();
     std::string upper_query = toUpper(query_string);
@@ -46,52 +92,85 @@ Query* query_parse(const std::string& query_string) {
     size_t order_pos = upper_query.find("ORDER BY");
     size_t limit_pos = upper_query.find("LIMIT");
     
+    // 1. SELECT
     if (select_pos != std::string::npos && from_pos != std::string::npos) {
         std::string select_clause = query_string.substr(select_pos + 6, from_pos - select_pos - 6);
-        select_clause = trim(select_clause);
-        
-        if (select_clause == "*") {
-            query->select_columns.clear();
-        } else {
-            LinkedList<std::string> cols = split(select_clause, ',');
-            query->select_columns.clear();
-            for (auto it = cols.begin(); it != cols.end(); ++it) {
-                query->select_columns.push_back(*it);
-            }
+        LinkedList<std::string> cols = split(select_clause, ',');
+        for (auto it = cols.begin(); it != cols.end(); ++it) {
+            std::string c = *it;
+            if (c != "*") query->select_columns.push_back(c);
         }
     }
     
+    // 2. FROM
     if (from_pos != std::string::npos) {
         size_t from_end = where_pos;
-        if (from_end == std::string::npos) from_end = join_pos;
+        // Eğer JOIN varsa FROM orada biter
+        if (join_pos != std::string::npos && (from_end == std::string::npos || join_pos < from_end)) from_end = join_pos;
         if (from_end == std::string::npos) from_end = order_pos;
         if (from_end == std::string::npos) from_end = limit_pos;
         if (from_end == std::string::npos) from_end = query_string.length();
         
         std::string from_clause = query_string.substr(from_pos + 4, from_end - from_pos - 4);
-        from_clause = trim(from_clause);
-        LinkedList<std::string> tables = split(from_clause, ',');
-        query->from_tables.clear();
-        for (auto it = tables.begin(); it != tables.end(); ++it) {
-            query->from_tables.push_back(*it);
+        query->from_tables.push_back(trim(from_clause));
+    }
+
+    // 3. JOIN (YENİ EKLENEN KISIM)
+    if (join_pos != std::string::npos) {
+        size_t on_pos = upper_query.find("ON", join_pos);
+        if (on_pos != std::string::npos) {
+            // Tablo Adı: JOIN ile ON arası
+            std::string table_part = query_string.substr(join_pos + 4, on_pos - (join_pos + 4));
+            
+            // Koşul: ON ile sonraki keyword arası
+            size_t cond_start = on_pos + 2;
+            size_t cond_end = where_pos;
+            if (cond_end == std::string::npos) cond_end = order_pos;
+            if (cond_end == std::string::npos) cond_end = limit_pos;
+            if (cond_end == std::string::npos) cond_end = query_string.length();
+            
+            std::string cond_str = query_string.substr(cond_start, cond_end - cond_start);
+            cond_str = trim(cond_str);
+            
+            // "ID = UserID" gibi bir ifadeyi parçala
+            size_t eq_pos = cond_str.find('=');
+            if (eq_pos != std::string::npos) {
+                JoinCondition join;
+                join.right_table = trim(table_part);
+                join.left_column = trim(cond_str.substr(0, eq_pos));  // Örn: ID
+                join.right_column = trim(cond_str.substr(eq_pos + 1)); // Örn: UserID
+                join.join_type = JoinType::INNER;
+                query->joins.push_back(join);
+            }
         }
     }
     
+    // 4. WHERE
     if (where_pos != std::string::npos) {
-        size_t where_end = join_pos;
-        if (where_end == std::string::npos) where_end = order_pos;
+        size_t where_end = order_pos; 
         if (where_end == std::string::npos) where_end = limit_pos;
         if (where_end == std::string::npos) where_end = query_string.length();
         
         std::string where_clause = query_string.substr(where_pos + 5, where_end - where_pos - 5);
         where_clause = trim(where_clause);
         
-        size_t eq_pos = where_clause.find('=');
-        if (eq_pos != std::string::npos) {
+        // Basit Operatör kontrolü
+        std::string opStr = "=";
+        ComparisonOperator opEnum = ComparisonOperator::EQUAL;
+        size_t opPos = std::string::npos;
+        
+        if ((opPos = where_clause.find(">=")) != std::string::npos) { opStr = ">="; opEnum = ComparisonOperator::GREATER_EQUAL; }
+        else if ((opPos = where_clause.find("<=")) != std::string::npos) { opStr = "<="; opEnum = ComparisonOperator::LESS_EQUAL; }
+        else if ((opPos = where_clause.find("!=")) != std::string::npos) { opStr = "!="; opEnum = ComparisonOperator::NOT_EQUAL; }
+        else if ((opPos = where_clause.find("=")) != std::string::npos) { opStr = "="; opEnum = ComparisonOperator::EQUAL; }
+        else if ((opPos = where_clause.find(">")) != std::string::npos) { opStr = ">"; opEnum = ComparisonOperator::GREATER_THAN; }
+        else if ((opPos = where_clause.find("<")) != std::string::npos) { opStr = "<"; opEnum = ComparisonOperator::LESS_THAN; }
+
+        if (opPos != std::string::npos) {
             QueryCondition condition;
-            condition.column_name = trim(where_clause.substr(0, eq_pos));
-            condition.value = trim(where_clause.substr(eq_pos + 1));
-            condition.op = ComparisonOperator::EQUAL;
+            condition.column_name = trim(where_clause.substr(0, opPos));
+            condition.value = trim(where_clause.substr(opPos + opStr.length()));
+            condition.op = opEnum;
             condition.logical_op = LogicalOperator::AND;
             query->conditions.push_back(condition);
         }
@@ -104,39 +183,14 @@ Query* query_parse(const std::string& query_string) {
     return query;
 }
 
+/**
+ * @brief Query yapısını ve içindeki tüm verileri bellekten siler
+ * 
+ * Bu fonksiyon, dinamik olarak oluşturulmuş Query yapısını temizler.
+ * Memory leak'leri önlemek için query kullanıldıktan sonra mutlaka çağrılmalıdır.
+ * 
+ * @param query Silinecek Query pointer'ı
+ */
 void query_destroy(Query* query) {
-    if (query) {
-        delete query;
-    }
+    if (query) delete query;
 }
-
-void query_print(const Query* query) {
-    if (!query) return;
-    
-    std::cout << "Query:\n";
-    std::cout << "  SELECT: ";
-    if (query->select_columns.empty()) {
-        std::cout << "*\n";
-    } else {
-        for (auto it = query->select_columns.begin(); it != query->select_columns.end(); ++it) {
-            std::cout << *it << " ";
-        }
-        std::cout << "\n";
-    }
-    
-    std::cout << "  FROM: ";
-    for (auto it = query->from_tables.begin(); it != query->from_tables.end(); ++it) {
-        std::cout << *it << " ";
-    }
-    std::cout << "\n";
-    
-    if (!query->conditions.empty()) {
-        std::cout << "  WHERE: ";
-        for (auto it = query->conditions.begin(); it != query->conditions.end(); ++it) {
-            const QueryCondition& cond = *it;
-            std::cout << cond.column_name << " = " << cond.value << " ";
-        }
-        std::cout << "\n";
-    }
-}
-
