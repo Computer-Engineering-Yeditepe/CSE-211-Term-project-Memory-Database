@@ -1,0 +1,47 @@
+{
+    "column_types": [
+        "INT",
+        "STRING",
+        "INT",
+        "STRING"
+    ],
+    "columns": [
+        "ID",
+        "Name",
+        "Age",
+        "Role"
+    ],
+    "rows": [
+        [
+            1,
+            "Alice",
+            30,
+            "Admin"
+        ],
+        [
+            2,
+            "Bob",
+            25,
+            "User"
+        ],
+        [
+            3,
+            "Charlie",
+            35,
+            "User"
+        ],
+        [
+            4,
+            "Dave",
+            40,
+            "Moderator"
+        ],
+        [
+            5,
+            "Eve",
+            22,
+            "User"
+        ]
+    ],
+    "table_name": "Users"
+}
