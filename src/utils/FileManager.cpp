@@ -122,8 +122,12 @@ Table* FileManager::loadTable(const std::string& filename) {
             ++typeIt; 
         }
         
+<<<<<<< HEAD
         
         newTable->insertRow(newRow);
+=======
+        newTable->insert(newRow);
+>>>>>>> 1d653b6 (Add simple Flask frontend with C++ backend connection)
     }
 
     std::cout << "Basarili: Tablo '" << tableName << "' dosyadan yuklendi (" << newTable->getRowCount() << " satir)." << std::endl;

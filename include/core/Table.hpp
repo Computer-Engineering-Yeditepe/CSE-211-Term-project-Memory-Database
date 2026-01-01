@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Row.hpp"
 #include "../data_structures/LinkedList.hpp"
-#include "../index/HashIndex.hpp"
+#include "../indexes/HashIndex.hpp"
 #include "../index/BPlusTree.hpp"
 
 class Table {
@@ -14,8 +14,8 @@ private:
     LinkedList<std::string> columns;
     LinkedList<std::string> types;
     LinkedList<Row*> rows;
-    HashIndex<int> primaryIndex;
-    index::BPlusTree* bTreeIndex;
+    HashIndex primaryIndex;
+    db_index::BPlusTree* bTreeIndex;
 
 public:
     Table(std::string tableName);
@@ -26,7 +26,7 @@ public:
     std::string getName() const;
     void insertRow(Row* row);
     void print() const;
-    index::BPlusTree* getBTree() { return bTreeIndex; }
+    db_index::BPlusTree* getBTree() { return bTreeIndex; }
     size_t getRowCount() const;
     const LinkedList<std::string>& getColumns() const;
     const LinkedList<std::string>& getTypes() const;

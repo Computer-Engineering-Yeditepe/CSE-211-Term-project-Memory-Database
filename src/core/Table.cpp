@@ -8,14 +8,14 @@ Table::Table(const std::string& tableName, const LinkedList<std::string>& colNam
     : primaryIndex(16) {
     this->name = tableName;
     
-    this->bTreeIndex = new index::BPlusTree(4);
+    this->bTreeIndex = new db_index::BPlusTree(4);
 
     for(const auto& col : colNames) this->columns.push_back(col);
     for(const auto& type : colTypes) this->types.push_back(type);
 }
 
 Table::Table(std::string tableName) : name(tableName) {
-    this->bTreeIndex = new index::BPlusTree(4);
+    this->bTreeIndex = new db_index::BPlusTree(4);
 }
 
 Table::~Table() {
