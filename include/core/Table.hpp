@@ -14,17 +14,20 @@ private:
     LinkedList<std::string> columns;
     LinkedList<std::string> types;
     LinkedList<Row*> rows;
-    HashIndex primaryIndex;
+    HashIndex<int> primaryIndex;
     db_index::BPlusTree* bTreeIndex;
 
 public:
     Table(std::string tableName);
+    Table(const std::string& tableName, const LinkedList<std::string>& colNames, const LinkedList<std::string>& colTypes);
     ~Table();
 
     void insert(Row* row);
     LinkedList<Row*>& getRows();
     std::string getName() const;
     void insertRow(Row* row);
+    Row* getRowById(int id);
+    void removeRow(int id);
     void print() const;
     db_index::BPlusTree* getBTree() { return bTreeIndex; }
     size_t getRowCount() const;
