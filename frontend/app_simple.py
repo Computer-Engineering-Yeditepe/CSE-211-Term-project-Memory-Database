@@ -1,31 +1,17 @@
-"""
-In-Memory Database Engine - Pure Flask (No JavaScript!)
-Tüm işlemler server-side, form POST ile çalışır.
-
-Çalıştırma: pip install flask && python app.py
-"""
-
 from flask import Flask, request, redirect, url_for
 import time, random
-import requests  # C++ backend'e HTTP istekleri için
+import requests
 
 app = Flask(__name__)
 
-# C++ Backend API URL
 CPP_BACKEND_URL = "http://localhost:8080"
 
 def check_cpp_backend():
-    """C++ backend'in çalışıp çalışmadığını kontrol et"""
     try:
         response = requests.get(f"{CPP_BACKEND_URL}/get?id=1", timeout=2)
         return response.status_code == 200
-    except Exception as e:
-        print(f"Backend check failed: {e}")
+    except:
         return False
-
-# ============================================================================
-# DATABASE
-# ============================================================================
 
 db = {
     "users": {
@@ -49,9 +35,6 @@ db = {
     }
 }
 
-# ============================================================================
-# HTML TEMPLATE (Jinja2 - Tek dosyada)
-# ============================================================================
 
 HTML = '''
 <!DOCTYPE html>
@@ -326,9 +309,6 @@ HTML = '''
 </html>
 '''
 
-# ============================================================================
-# ROUTES
-# ============================================================================
 
 @app.route('/')
 def index():
@@ -462,6 +442,5 @@ def benchmark():
     )
 
 if __name__ == '__main__':
-    print("\n🚀 Server: http://localhost:5002 (No JavaScript!)\n")
     app.run(debug=True, host='127.0.0.1', port=5002)
 
