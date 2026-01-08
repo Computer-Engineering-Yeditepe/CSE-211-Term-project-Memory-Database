@@ -7,7 +7,7 @@
 
 #include "../../include/index/BPlusTree.hpp"    
 
-namespace index {
+namespace db_index {
 
     // ==================== Private Helper Methods ====================
 
@@ -883,4 +883,4 @@ namespace index {
         std::cout << "========================================" << std::endl;
     }
 
-} // namespace index
+} // namespace db_index

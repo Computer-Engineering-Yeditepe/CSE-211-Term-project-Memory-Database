@@ -14,7 +14,17 @@ struct HashEntry {
     HashEntry(Row* r) : row(r) {}
 };
 
-// Yardımcı: İki tablonun sütunlarını birleştir
+/**
+ * @brief İki tablonun sütun isimlerini ve tiplerini birleştirir
+ * 
+ * Join işlemi sonucunda oluşacak tablonun sütun yapısını hazırlar.
+ * Önce sol tablonun tüm sütunları, sonra sağ tablonun tüm sütunları eklenir.
+ * 
+ * @param left Sol tablo
+ * @param right Sağ tablo
+ * @param cols Çıktı: Birleştirilmiş sütun isimleri listesi
+ * @param types Çıktı: Birleştirilmiş sütun tipleri listesi
+ */
 static void merge_columns(Table* left, Table* right, LinkedList<std::string>& cols, LinkedList<std::string>& types) {
     for (const auto& col : left->getColumns()) cols.push_back(col);
     for (const auto& type : left->getTypes()) types.push_back(type);
@@ -23,6 +33,20 @@ static void merge_columns(Table* left, Table* right, LinkedList<std::string>& co
     for (const auto& type : right->getTypes()) types.push_back(type);
 }
 
+/**
+ * @brief Nested Loop Join algoritması ile iki tabloyu birleştirir
+ * 
+ * Bu fonksiyon, sol tablodaki her satırı sağ tablodaki tüm satırlarla karşılaştırarak
+ * eşleşen satırları birleştirir. Küçük tablolar için uygundur.
+ * Zaman karmaşıklığı: O(n*m) (n=sol tablo satır sayısı, m=sağ tablo satır sayısı)
+ * 
+ * @param left_table Sol tablo (left table)
+ * @param right_table Sağ tablo (right table)
+ * @param left_column_index Sol tablodaki join sütununun index'i
+ * @param right_column_index Sağ tablodaki join sütununun index'i
+ * @param join_type Join tipi (INNER, LEFT, RIGHT, FULL) - şu an sadece INNER destekleniyor
+ * @return Birleştirilmiş yeni tablo pointer'ı, hata durumunda nullptr
+ */
 Table* join_nested_loop(Table* left_table, Table* right_table,
                         int left_column_index, int right_column_index,
                         JoinType join_type) {
@@ -80,6 +104,20 @@ Table* join_nested_loop(Table* left_table, Table* right_table,
     return result;
 }
 
+/**
+ * @brief Hash Join algoritması ile iki tabloyu birleştirir
+ * 
+ * Bu fonksiyon, sol tabloyu hash tablosuna yerleştirip sağ tablodaki satırları
+ * hash tablosunda arar. Büyük tablolar için nested loop'dan daha verimlidir.
+ * Zaman karmaşıklığı: O(n+m) (n=sol tablo satır sayısı, m=sağ tablo satır sayısı)
+ * 
+ * @param left_table Sol tablo (left table)
+ * @param right_table Sağ tablo (right table)
+ * @param left_column_index Sol tablodaki join sütununun index'i
+ * @param right_column_index Sağ tablodaki join sütununun index'i
+ * @param join_type Join tipi (INNER, LEFT, RIGHT, FULL) - şu an sadece INNER destekleniyor
+ * @return Birleştirilmiş yeni tablo pointer'ı, hata durumunda nullptr
+ */
 Table* join_hash(Table* left_table, Table* right_table,
                  int left_column_index, int right_column_index,
                  JoinType join_type) {
@@ -142,6 +180,18 @@ Table* join_hash(Table* left_table, Table* right_table,
     return result;
 }
 
+/**
+ * @brief Join condition'a göre iki tabloyu birleştirir
+ * 
+ * Bu fonksiyon, join condition'dan sütun isimlerini alıp index'lerini bulur,
+ * tablo boyutlarına göre nested loop veya hash join algoritmasını seçer.
+ * Eğer her iki tablo da 100 satırdan küçükse nested loop, aksi halde hash join kullanılır.
+ * 
+ * @param left_table Sol tablo (left table)
+ * @param right_table Sağ tablo (right table)
+ * @param condition Join condition (hangi sütunlar üzerinden join yapılacak)
+ * @return Birleştirilmiş yeni tablo pointer'ı, hata durumunda nullptr
+ */
 Table* join_execute(Table* left_table, Table* right_table,
                     const JoinCondition& condition) {
     if (!left_table || !right_table) return nullptr;
