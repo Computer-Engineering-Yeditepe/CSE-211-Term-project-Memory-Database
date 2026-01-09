@@ -142,3 +142,37 @@ Query* query_parse(const std::string& query_string) {
 void query_destroy(Query* query) {
     if (query) delete query;
 }
+
+void query_print(const Query* query) {
+    if (!query) return;
+    
+    std::cout << "Query:\n";
+    std::cout << "  SELECT: ";
+    if (query->select_columns.empty()) {
+        std::cout << "*\n";
+    } else {
+        for (auto it = query->select_columns.begin(); it != query->select_columns.end(); ++it) {
+            std::cout << *it << " ";
+        }
+        std::cout << "\n";
+    }
+    
+    std::cout << "  FROM: ";
+    for (auto it = query->from_tables.begin(); it != query->from_tables.end(); ++it) {
+        std::cout << *it << " ";
+    }
+    std::cout << "\n";
+    
+    if (!query->conditions.empty()) {
+        std::cout << "  WHERE: ";
+        for (auto it = query->conditions.begin(); it != query->conditions.end(); ++it) {
+            const QueryCondition& cond = *it;
+            std::cout << cond.column_name << " = " << cond.value << " ";
+        }
+        std::cout << "\n";
+    } else {
+        std::cout << "  WHERE: (none)\n";
+    }
+    
+    std::cout << "  SELECT columns count: " << query->select_columns.size() << "\n";
+}

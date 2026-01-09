@@ -9,7 +9,7 @@
 
 // Forward declaration
 
-struct Row;
+class Row;
 template<typename K>
 class HashIndex {
 private:

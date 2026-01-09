@@ -1,7 +1,7 @@
 #ifndef JOIN_ENGINE_HPP
 #define JOIN_ENGINE_HPP
 
-#include "../core/Table.hpp"
+#include "core/Table.hpp"
 #include "query_types.hpp"
 #include <string>
 

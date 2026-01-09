@@ -5,7 +5,7 @@ Table::Table(const std::string& tableName, const LinkedList<std::string>& colNam
     : primaryIndex(16) {
     this->name = tableName;
     
-    this->bTreeIndex = new index::BPlusTree(4);
+    this->bTreeIndex = new idx::BPlusTree(4);
 
     for(const auto& col : colNames) this->columns.push_back(col);
     for(const auto& type : colTypes) this->types.push_back(type);
@@ -23,7 +23,7 @@ void Table::insertRow(Row* row) {
 
     primaryIndex.insert(row->getId(), row);
 
-    index::RecordID record(0,0,row);
+    idx::RecordID record(0,0,row);
     bTreeIndex->insert(row->getId(), record);
 }
 

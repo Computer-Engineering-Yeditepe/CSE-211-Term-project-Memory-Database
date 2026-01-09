@@ -199,3 +199,5 @@ coverage.info
 # ============================================================================
 valgrind-out.txt
 vgcore.*
+frontend/.venv/
+frontend/.venv

@@ -18,7 +18,7 @@ private:
     
     LinkedList<Row*> rows;
     HashIndex<int> primaryIndex;
-    index::BPlusTree* bTreeIndex;
+    idx::BPlusTree* bTreeIndex;
 
 public:
     
@@ -34,7 +34,7 @@ public:
     
     void print() const;
 
-    index::BPlusTree* getBTree() { return bTreeIndex; }
+    idx::BPlusTree* getBTree() { return bTreeIndex; }
     
     size_t getRowCount() const;
 

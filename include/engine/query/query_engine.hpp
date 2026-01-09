@@ -1,7 +1,7 @@
 #ifndef QUERY_ENGINE_HPP
 #define QUERY_ENGINE_HPP
 
-#include "../core/Table.hpp"
+#include "core/Table.hpp"
 #include "query_types.hpp"
 #include "../../data_structures/LinkedList.hpp"
 #include "../../data_structures/Map.hpp"

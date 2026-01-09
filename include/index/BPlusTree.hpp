@@ -13,7 +13,7 @@
 
 class Row;
 
-namespace index {
+namespace idx {
 
     /**
      * @brief Record identifier structure
