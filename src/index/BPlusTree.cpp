@@ -883,4 +883,4 @@ namespace idx {
         std::cout << "========================================" << std::endl;
     }
 
-} // namespace index
+} // namespace db_index

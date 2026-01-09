@@ -11,26 +11,59 @@
 #include <iostream>
 #include <string>
 
+/**
+ * @brief Veritabanı constructor'ı
+ * Boş bir veritabanı oluşturur.
+ */
 Database::Database() {}
+
+/**
+ * @brief Veritabanı destructor'ı
+ * Tabloların silinmesi için kullanılır (şu an boş).
+ */
 Database::~Database() {}
 
+/**
+ * @brief Veritabanına yeni bir tablo ekler
+ * @param table Eklenecek tablo pointer'ı
+ * @return Başarılı ise 0, hata durumunda -1
+ */
 int Database::addTable(Table* table) {
     if (!table) return -1;
     tables.insert(table->getName(), table);
     return 0;
 }
 
+/**
+ * @brief İsme göre tablo getirir
+ * @param table_name Aranacak tablo ismi
+ * @return Bulunan tablo pointer'ı, bulunamazsa nullptr
+ */
 Table* Database::getTable(const std::string& table_name) {
     Table** found = tables.find(table_name);
     return found ? *found : nullptr;
 }
 
+/**
+ * @brief Veritabanındaki tüm tablo isimlerini döndürür
+ * @return Tablo isimlerinin listesi
+ */
 LinkedList<std::string> Database::getTableNames() const {
     LinkedList<std::string> names;
     for (auto it = tables.begin(); it != tables.end(); ++it) names.push_back((*it).key);
     return names;
 }
 
+/**
+ * @brief Sütun ismine göre sütun index'ini bulur
+ * 
+ * Bu yardımcı fonksiyon, tablodaki sütun isimlerini tarayarak
+ * belirtilen sütunun index'ini döndürür.
+ * 
+ * @param table Aranacak tablo
+ * @param column_name Aranacak sütun ismi
+ * @return Sütun index'i, bulunamazsa -1
+ */
 static int get_column_index_by_name(Table* table, const std::string& column_name) {
     if (!table) return -1;
     int index = 0;
@@ -41,7 +74,18 @@ static int get_column_index_by_name(Table* table, const std::string& column_name
     return -1;
 }
 
-// 1. Sayısal karşılaştırma desteği
+/**
+ * @brief Bir satırın WHERE koşulunu karşılayıp karşılamadığını kontrol eder
+ * 
+ * Bu fonksiyon, sayısal ve string karşılaştırmaları destekler.
+ * Desteklenen operatörler: EQUAL, NOT_EQUAL, LESS_THAN, LESS_EQUAL,
+ * GREATER_THAN, GREATER_EQUAL, LIKE
+ * 
+ * @param row Kontrol edilecek satır
+ * @param condition WHERE koşulu
+ * @param table Satırın ait olduğu tablo (sütun bilgisi için)
+ * @return Koşul sağlanıyorsa true, aksi halde false
+ */
 static bool evaluate_condition(Row* row, const QueryCondition& condition, Table* table) {
     if (!row || !table) return false;
     
@@ -78,7 +122,16 @@ static bool evaluate_condition(Row* row, const QueryCondition& condition, Table*
     }
 }
 
-// 2. Filtreleme fonksiyonu
+/**
+ * @brief WHERE koşullarını tabloya uygular
+ * 
+ * Bu fonksiyon, verilen koşullara göre tablodaki satırları filtreler.
+ * Sayısal ve string karşılaştırmaları destekler.
+ * 
+ * @param table Filtrelenecek tablo
+ * @param conditions WHERE koşulları listesi
+ * @return Filtrelenmiş yeni tablo pointer'ı, hata durumunda orijinal tablo
+ */
 Table* query_apply_where(Table* table, const LinkedList<QueryCondition>& conditions) {
     if (!table || conditions.empty()) return table;
     
@@ -106,7 +159,16 @@ Table* query_apply_where(Table* table, const LinkedList<QueryCondition>& conditi
     return result;
 }
 
-// 3. Sütun seçimi (Projection)
+/**
+ * @brief SELECT sütunlarını tabloya uygular (projection)
+ * 
+ * Bu fonksiyon, sadece belirtilen sütunları içeren yeni bir tablo oluşturur.
+ * SQL'deki SELECT sütun seçimi işlemini gerçekleştirir.
+ * 
+ * @param table Kaynak tablo
+ * @param column_names Seçilecek sütun isimleri listesi
+ * @return Sadece seçilen sütunları içeren yeni tablo pointer'ı
+ */
 Table* query_apply_select(Table* table, const LinkedList<std::string>& column_names) {
     if (!table || column_names.empty()) return table;
 
@@ -151,6 +213,17 @@ Table* query_apply_select(Table* table, const LinkedList<std::string>& column_na
     return result;
 }
 
+/**
+ * @brief LIMIT ve OFFSET'i tabloya uygular
+ * 
+ * Bu fonksiyon, belirtilen sayıda satırı belirtilen offset'ten başlayarak döndürür.
+ * Sayfalama (pagination) için kullanılır.
+ * 
+ * @param table Kaynak tablo
+ * @param limit Döndürülecek maksimum satır sayısı (-1 ise tümü)
+ * @param offset Atlanacak satır sayısı
+ * @return Limit ve offset uygulanmış yeni tablo pointer'ı
+ */
 Table* query_apply_limit(Table* table, int limit, int offset) {
     if (!table) return nullptr;
     if (limit < 0 && offset == 0) return table;
@@ -176,11 +249,38 @@ Table* query_apply_limit(Table* table, int limit, int offset) {
     return result;
 }
 
+/**
+ * @brief ORDER BY sıralamasını tabloya uygular
+ * 
+ * Bu fonksiyon, belirtilen sütunlara göre tabloyu sıralar.
+ * Şu an basit bir implementasyon (pass-through).
+ * 
+ * @param table Sıralanacak tablo
+ * @param column_names Sıralama yapılacak sütun isimleri
+ * @param ascending Artan sıralama (true) veya azalan sıralama (false)
+ * @return Sıralanmış tablo pointer'ı (şu an orijinal tablo döner)
+ */
 Table* query_apply_order_by(Table* table, const LinkedList<std::string>& column_names, bool ascending) {
     return table; // Basitlik için pass geçiyoruz
 }
 
-// 4. ANA EXECUTE FONKSIYONU (EKSİK JOIN EKLENDİ)
+/**
+ * @brief SQL benzeri query'yi çalıştırır
+ * 
+ * Bu fonksiyon, Query yapısındaki tüm işlemleri sırayla uygular:
+ * 1. FROM (tablo seçimi)
+ * 2. JOIN (tablo birleştirme - nested loop veya hash join)
+ * 3. WHERE (filtreleme, ID sütunu için index optimizasyonu ile)
+ * 4. SELECT (sütun seçimi/projection)
+ * 5. ORDER BY (sıralama - şu an pass-through)
+ * 6. LIMIT (sayfalama)
+ * 
+ * Özel optimizasyon: WHERE koşulunda "ID = değer" varsa Hash Index kullanılır (O(1) arama).
+ * 
+ * @param db Veritabanı pointer'ı
+ * @param query Çalıştırılacak query yapısı
+ * @return Sonuç tablosu pointer'ı, hata durumunda nullptr
+ */
 Table* query_execute(Database* db, const Query* query) {
     if (!db || !query || query->from_tables.empty()) return nullptr;
     
