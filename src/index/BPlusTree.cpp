@@ -7,7 +7,7 @@
 
 #include "../../include/index/BPlusTree.hpp"    
 
-namespace index {
+namespace idx {
 
     // ==================== Private Helper Methods ====================
 
